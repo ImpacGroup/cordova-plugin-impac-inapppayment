@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        id="cordova-plugin-swissRxLogin" version="0.0.1">
+    <name>swissRxLogin</name>
+
+    <description>An Android Cordova plugin that allows to login with swiss-rx.</description>
+    <license>MIT</license>
+
+    <keywords>cordova,android,swiss-rx,swiss,signin,login</keywords>
+    <repo>https://felixNievelsteinImpac@bitbucket.org/impacgroup/swissrx-login.git</repo>
+    <issue>https://github.com/stanidesis/toastyplugin/issues</issue>
+  
+    <engines>
+        <engine name="cordova" version=">=8.0.0"/>
+    </engines>
+  
+    <js-module src="www/swissRxLogin.js" name="swissRxLogin">
+        <clobbers target="window.plugins.swissRxLogin" />
+    </js-module>
+    <platform name="ios">
+    </platform>
+    <platform name="android">
+        <config-file target="res/xml/config.xml" parent="/*">
+            <feature name="swissRxLogin">
+                <param name="android-package" value="de.impacgroup.cordova.plugin.swissRxLogin"/>
+            </feature>
+        </config-file>
+
+        <source-file src="src/android/swissRxLogin.java" target-dir="src/de/impacgroup/cordova/plugin" />
+    </platform>
+</plugin>
