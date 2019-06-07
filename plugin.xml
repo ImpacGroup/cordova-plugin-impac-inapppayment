@@ -19,6 +19,12 @@
         <clobbers target="window.plugins.swissRxLogin" />
     </js-module>
     <platform name="ios">
+        <config-file target="config.xml" parent="/*">
+            <feature name="swissRxLogin">
+                <param name="ios-package" value="de.impacgroup.cordova.plugin.swissRxLogin">
+            </feature>
+        </config-file>
+        <source-file src="src/ios/SwissRxLogin.swift">
     </platform>
     <platform name="android">
         <config-file target="res/xml/config.xml" parent="/*">
