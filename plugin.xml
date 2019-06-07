@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
         xmlns:android="http://schemas.android.com/apk/res/android"
-        id="de.impac.cordova-plugin-swissRxLogin" version="0.1.0">
+        id="cordova-plugin-swissRxLogin" version="0.1.0">
     <name>swissRxLogin</name>
 
     <description>An Android Cordova plugin that allows to sign in with swiss-rx.</description>
