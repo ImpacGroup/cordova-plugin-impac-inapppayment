@@ -8,8 +8,8 @@
     <license>MIT</license>
 
     <keywords>cordova,android,swiss-rx,swiss,signin,login</keywords>
-    <repo>https://felixNievelsteinImpac@bitbucket.org/impacgroup/swissrx-login.git</repo>
-    <issue>https://github.com/stanidesis/toastyplugin/issues</issue>
+    <repo>https://github.com/ImpacGroup/Cordova-PlugIn-Swiss-Rx.git</repo>
+    <issue>https://github.com/ImpacGroup/Cordova-PlugIn-Swiss-Rx/issues</issue>
   
     <engines>
         <engine name="cordova" version=">=8.0.0"/>
