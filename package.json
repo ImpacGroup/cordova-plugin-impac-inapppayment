@@ -1,7 +1,7 @@
 {
     "name": "cordova-plugin-swissRxLogin",
-    "version": "0.0.1",
-    "description": "An Android Cordova plugin that allows users to display simple Toast messages at the bottom of the screen.",
+    "version": "0.1.0",
+    "description": "An Android Cordova plugin that allows users to sign in with swiss-rx-login to your ios or android application.",
     "cordova": {
       "id": "cordova-plugin-swissRxLogin",
       "platforms": [
@@ -11,15 +11,14 @@
     },
     "repository": {
       "type": "git",
-      "url": "git+https://github.com/stanidesis/toastyplugin.git"
+      "url": "git+https://github.com/ImpacGroup/Cordova-PlugIn-Swiss-Rx.git"
     },
     "keywords": [
-      "Toast",
-      "Notification",
-      "Message",
-      "Alert",
+      "Swiss Rx",
+      "SignIn",
       "ecosystem:cordova",
-      "cordova-android"
+      "cordova-android",
+      "cordova-ios"
     ],
     "engines": [
       {
@@ -27,10 +26,10 @@
         "version": ">=3.0.0"
       }
     ],
-    "author": "Stanley Idesis <stan.idesis@gmail.com>",
+    "author": "Felix Nievelstein <fn@impacgroup.de>",
     "license": "MIT",
     "bugs": {
-      "url": "https://github.com/stanidesis/toastyplugin/issues"
+      "url": "https://github.com/ImpacGroup/Cordova-PlugIn-Swiss-Rx/issues"
     },
-    "homepage": "https://github.com/stanidesis/toastyplugin/"
+    "homepage": "https://github.com/ImpacGroup/Cordova-PlugIn-Swiss-Rx"
   }

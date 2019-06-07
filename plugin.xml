@@ -4,7 +4,7 @@
         id="de.impac.cordova-plugin-swissRxLogin" version="0.0.1">
     <name>swissRxLogin</name>
 
-    <description>An Android Cordova plugin that allows to login with swiss-rx.</description>
+    <description>An Android Cordova plugin that allows to sign in with swiss-rx.</description>
     <license>MIT</license>
 
     <keywords>cordova,android,swiss-rx,swiss,signin,login</keywords>
