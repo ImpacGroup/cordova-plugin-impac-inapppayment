@@ -12,6 +12,8 @@
     <objects>
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="IMPSwissRxViewController" customModule="SwissRxTestProject" customModuleProvider="target">
             <connections>
+                <outlet property="activityIndicator" destination="JiI-op-i9z" id="wiL-os-wyx"/>
+                <outlet property="toolBar" destination="4Ml-6d-NyY" id="3Ws-sA-ehQ"/>
                 <outlet property="view" destination="cHl-aL-O1H" id="t3Z-r3-MCQ"/>
             </connections>
         </placeholder>
@@ -19,7 +21,34 @@
         <view contentMode="scaleToFill" id="cHl-aL-O1H">
             <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+            <subviews>
+                <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="4Ml-6d-NyY">
+                    <rect key="frame" x="0.0" y="818" width="414" height="44"/>
+                    <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
+                    <items>
+                        <barButtonItem systemItem="cancel" id="XJi-DE-I1G">
+                            <connections>
+                                <action selector="cancelSignInButtonPressed:" destination="-1" id="mFd-E6-WaW"/>
+                            </connections>
+                        </barButtonItem>
+                        <barButtonItem style="plain" systemItem="flexibleSpace" id="h3p-Oj-ykf"/>
+                        <barButtonItem systemItem="refresh" id="41X-LA-aMU">
+                            <connections>
+                                <action selector="refreshButtonPressed:" destination="-1" id="A17-oV-uvi"/>
+                            </connections>
+                        </barButtonItem>
+                    </items>
+                </toolbar>
+                <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" hidesWhenStopped="YES" animating="YES" style="whiteLarge" translatesAutoresizingMaskIntoConstraints="NO" id="JiI-op-i9z">
+                    <rect key="frame" x="188.5" y="429.5" width="37" height="37"/>
+                    <color key="color" white="0.33333333333333331" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                </activityIndicatorView>
+            </subviews>
             <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+            <constraints>
+                <constraint firstItem="JiI-op-i9z" firstAttribute="centerY" secondItem="cHl-aL-O1H" secondAttribute="centerY" id="GgD-nj-261"/>
+                <constraint firstItem="JiI-op-i9z" firstAttribute="centerX" secondItem="cHl-aL-O1H" secondAttribute="centerX" id="SvY-eS-YGU"/>
+            </constraints>
             <viewLayoutGuide key="safeArea" id="U2n-KA-26r"/>
             <point key="canvasLocation" x="-21" y="-43"/>
         </view>

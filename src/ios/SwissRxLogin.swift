@@ -11,18 +11,19 @@ import UIKit
 
 @objc(SwissRxLogin) class SwissRxLogin: CDVPlugin {
     @objc(showLogin:) func showLogin(command: CDVInvokedUrlCommand) {
-        print(command)
         if command.arguments.count == 2, let companyId = command.arguments[0] as? String, let appId = command.arguments[1] as? String {
-            presentLoginwith(companyId: companyId, appId: appId)
+            presentLoginwith(companyId: companyId, appId: appId, commandId: command.callbackId)
         } else {
             print("SwissRxLogin: Invalid arguments for companyId and / or appId")
         }
     }
     
-    func presentLoginwith(companyId: String, appId: String) {        
+    func presentLoginwith(companyId: String, appId: String, commandId: String) {
         let loginVC = IMPSwissRxViewController(nibName: "IMPSwissRxViewController", bundle: nil)
         loginVC.companyId = companyId
         loginVC.postBackURL = appId
+        loginVC.delegate = self
+        loginVC.commandId = commandId
         getCurrentViewController()?.present(loginVC, animated: true, completion: nil)
     }
     
@@ -36,5 +37,17 @@ import UIKit
             }
         }
         return currentVC
+    }
+}
+
+extension SwissRxLogin: IMPSwissRxVCDelegate {
+    func userSignedIn(commandId: String) {
+        let result = CDVPluginResult(status: CDVCommandStatus_OK)
+        self.commandDelegate.send(result, callbackId: commandId)
+    }
+    
+    func signInFailed(commandId: String) {
+        let result = CDVPluginResult(status: CDVCommandStatus_ERROR)
+        self.commandDelegate.send(result, callbackId: commandId)
     }
 }

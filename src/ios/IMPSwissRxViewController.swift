@@ -9,18 +9,29 @@
 import UIKit
 import WebKit
 
+protocol IMPSwissRxVCDelegate: class {
+    func userSignedIn(commandId: String)
+    func signInFailed(commandId: String)
+}
+
 class IMPSwissRxViewController: UIViewController {
 
+    @IBOutlet weak var toolBar: UIToolbar!
+    @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
+    
     var wkWebView: WKWebView!
     var isFinishedLoading = false
     var postBackURL = ""
     var companyId = ""
-
+    var commandId = ""
+    
+    weak var delegate: IMPSwissRxVCDelegate?
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
         self.wkWebView = WKWebView(frame: CGRect(x: 0, y: 0, width: self.view.frame.width, height: self.view.frame.height))
-        view.addSubview(wkWebView)
+        view.insertSubview(wkWebView, belowSubview: toolBar)
         wkWebView.clipsToBounds = true
         wkWebView.navigationDelegate = self
         wkWebView.uiDelegate = self
@@ -29,6 +40,8 @@ class IMPSwissRxViewController: UIViewController {
     }
     
     func loadConnection() {
+        activityIndicator.startAnimating()
+        activityIndicator.isHidden = false
         if wkWebView.url != nil {
             wkWebView.reload()
         } else {
@@ -82,13 +95,13 @@ class IMPSwissRxViewController: UIViewController {
         return url
     }
     
-    
-    @objc func showOfflineVC() {
-        self.performSegue(withIdentifier: "offlineSegue", sender: nil)
+    @IBAction func cancelSignInButtonPressed(_ sender: Any) {
+        delegate?.signInFailed(commandId: commandId)
+        dismiss(animated: true, completion: nil)
     }
     
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        
+    @IBAction func refreshButtonPressed(_ sender: Any) {
+        loadConnection()
     }
 }
 
@@ -96,8 +109,8 @@ extension IMPSwissRxViewController: WKNavigationDelegate, WKUIDelegate {
     
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         isFinishedLoading = true
-        print("Did finish Navigation")
-        print(navigation)
+        activityIndicator.stopAnimating()
+        view.backgroundColor = UIColor(red: 254 / 255, green: 233 / 255, blue: 235 / 255, alpha: 1.0)
     }
     
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
@@ -111,10 +124,8 @@ extension IMPSwissRxViewController: WKNavigationDelegate, WKUIDelegate {
             else
             {
                 decisionHandler(.cancel)
-                let alertCon = UIAlertController(title: "Eingeloggt", message: "Benutzer angemeldet", preferredStyle: .alert)
-                let action = UIAlertAction(title: "Ok", style: .cancel, handler: nil)
-                alertCon.addAction(action)
-                self.present(alertCon, animated: true, completion: nil)
+                delegate?.userSignedIn(commandId: commandId)
+                dismiss(animated: true, completion: nil)
             }
         }
         else
