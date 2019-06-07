@@ -8,13 +8,22 @@
 
 import Foundation
 import UIKit
-import Cordova
 
-class SwissRxLogin: CDVPlugin {
-    func showLogin(command: CDVInvokedUrlCommand) {
+@objc(SwissRxLogin) class SwissRxLogin: CDVPlugin {
+    @objc(showLogin:) func showLogin(command: CDVInvokedUrlCommand) {
         print(command)
-        let alert = UIAlertController(title: "Test Alert", message: "\(command)", preferredStyle: .alert)
-        getCurrentViewController()?.present(alert, animated: true, completion: nil)
+        if command.arguments.count == 2, let companyId = command.arguments[0] as? String, let appId = command.arguments[1] as? String {
+            presentLoginwith(companyId: companyId, appId: appId)
+        } else {
+            print("SwissRxLogin: Invalid arguments for companyId and / or appId")
+        }
+    }
+    
+    func presentLoginwith(companyId: String, appId: String) {        
+        let loginVC = IMPSwissRxViewController(nibName: "IMPSwissRxViewController", bundle: nil)
+        loginVC.companyId = companyId
+        loginVC.postBackURL = appId
+        getCurrentViewController()?.present(loginVC, animated: true, completion: nil)
     }
     
     func getCurrentViewController() -> UIViewController? {
