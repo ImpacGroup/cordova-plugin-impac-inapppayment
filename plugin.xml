@@ -18,6 +18,7 @@
     <js-module src="www/swissRxLogin.js" name="swissRxLogin">
         <clobbers target="window.plugins.swissRxLogin" />
     </js-module>
+
     <platform name="ios">
         <config-file target="config.xml" parent="/*">
             <feature name="SwissRxLogin">
@@ -28,6 +29,7 @@
         <source-file src="src/ios/IMPSwissRxViewController.swift"/>
         <source-file src="src/ios/IMPSwissRxViewController.xib"/>
     </platform>
+    
     <platform name="android">
         <config-file target="config.xml" parent="/*">
             <feature name="SwissRxLogin">
