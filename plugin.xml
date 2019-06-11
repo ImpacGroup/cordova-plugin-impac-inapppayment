@@ -30,7 +30,7 @@
         <source-file src="src/ios/IMPSwissRxViewController.xib"/>
     </platform>
 
-    <platform name="android">
+    <platform name="android">        
         <config-file target="config.xml" parent="/*">
             <feature name="SwissRxLogin">
                 <param name="android-package" value="de.impacgroup.swissrxlogin.SwissRxLogin"/>
@@ -39,5 +39,6 @@
         <source-file src="src/android/SwissRxLogin.java" target-dir="src/de/impacgroup/swissrxlogin"/>
         <source-file src="src/android/IMPSwissRxActivity.java" target-dir="src/de/impacgroup/swissrxlogin"/>
         <source-file src="src/android/activity_impswiss_rx.xml" target-dir="res/layout"/>
+        <framework src="cordova-plugin-android-support-v7-appcompat">
     </platform>
 </plugin>
