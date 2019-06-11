@@ -31,7 +31,7 @@
     <platform name="android">
         <config-file target="config.xml" parent="/*">
             <feature name="SwissRxLogin">
-                <param name="android-package" value="de.impacgroup.swissrxlogin"/>
+                <param name="android-package" value="de.impacgroup.swissrxlogin.SwissRxLogin"/>
             </feature>
         </config-file>
         <source-file src="src/android/SwissRxLogin.java" target-dir="src/de/impacgroup/swissrxlogin"/>
