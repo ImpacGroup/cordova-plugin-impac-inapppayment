@@ -29,7 +29,7 @@
         <source-file src="src/ios/IMPSwissRxViewController.swift"/>
         <source-file src="src/ios/IMPSwissRxViewController.xib"/>
     </platform>
-    
+
     <platform name="android">
         <config-file target="config.xml" parent="/*">
             <feature name="SwissRxLogin">
@@ -37,5 +37,7 @@
             </feature>
         </config-file>
         <source-file src="src/android/SwissRxLogin.java" target-dir="src/de/impacgroup/swissrxlogin"/>
+        <source-file src="src/android/IMPSwissRxActivity.java" target-dir="src/de/impacgroup/swissrxlogin"/>
+        <source-file src="src/android/activity_impswiss_rx.xml" target-dir="res/layout"/>
     </platform>
 </plugin>
