@@ -28,4 +28,12 @@
         <source-file src="src/ios/IMPSwissRxViewController.swift"/>
         <source-file src="src/ios/IMPSwissRxViewController.xib"/>
     </platform>
+    <platform name="android">
+        <config-file target="config.xml" parent="/*">
+            <feature name="swissRxLogin">
+                <param name="android-package" value="de.impacgroup.swissrxlogin"/>
+            </feature>
+        </config-file>
+        <source-file src="src/android/swissRxLogin.java"/>
+    </platform>
 </plugin>
