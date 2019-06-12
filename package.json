@@ -20,12 +20,15 @@
       "cordova-android",
       "cordova-ios"
     ],
-    "engines": [
-      {
-        "name": "cordova",
-        "version": ">=3.0.0"
+    "engines": {
+      "cordovaDependencies": {
+        "0.1.0": {
+          "cordova-android": ">7.0.0",
+          "cordova-ios": ">4.0.0",
+          "cordova-plugin-android-support-v7-appcompat": "1.0.0"
+        }
       }
-    ],
+    },
     "author": "Felix Nievelstein <fn@impacgroup.de>",
     "license": "MIT",
     "bugs": {

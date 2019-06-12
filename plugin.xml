@@ -38,7 +38,6 @@
         </config-file>
         <source-file src="src/android/SwissRxLogin.java" target-dir="src/de/impacgroup/swissrxlogin"/>
         <source-file src="src/android/IMPSwissRxActivity.java" target-dir="src/de/impacgroup/swissrxlogin"/>
-        <source-file src="src/android/activity_impswiss_rx.xml" target-dir="res/layout"/>
-        <framework src="cordova-plugin-android-support-v7-appcompat"/>
+        <source-file src="src/android/activity_impswiss_rx.xml" target-dir="res/layout"/>        
     </platform>
 </plugin>
