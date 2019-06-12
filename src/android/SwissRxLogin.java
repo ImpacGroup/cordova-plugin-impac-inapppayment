@@ -11,8 +11,8 @@ import org.json.JSONException;
 
 public class SwissRxLogin extends CordovaPlugin {
 
-    private static final String CONST_APPID= "appId";
-    private static final String CONST_COMPANYID 	= "companyId";
+    static final String CONST_APPID= "appId";
+    static final String CONST_COMPANYID 	= "companyId";
 
     private CallbackContext callbackContext;
 
