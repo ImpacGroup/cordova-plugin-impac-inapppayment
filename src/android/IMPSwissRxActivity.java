@@ -2,9 +2,8 @@ package de.impacgroup.swissrxlogin;
 
 import android.content.Intent;
 import android.net.Uri;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.webkit.CookieManager;
 import android.webkit.ValueCallback;
@@ -17,7 +16,6 @@ public class IMPSwissRxActivity extends AppCompatActivity implements SwissRxWebV
 
     private WebView webView;
     private ProgressBar progressBar;
-    private boolean finishedLoading = false;
     private String companyId = "";
     private String postBackURL = "";
 
@@ -32,7 +30,6 @@ public class IMPSwissRxActivity extends AppCompatActivity implements SwissRxWebV
         setContentView(getResources().getIdentifier("activity_impswiss_rx", "layout", getPackageName()));
 
         webView = (WebView) findViewById(getResources().getIdentifier("webView", "id", getPackageName()));
-        webView.getSettings().setJavaScriptEnabled(true);
 
         progressBar = (ProgressBar) findViewById(getResources().getIdentifier("progressBar", "id", getPackageName()));
         progressBar.setVisibility(View.GONE);
@@ -54,7 +51,6 @@ public class IMPSwissRxActivity extends AppCompatActivity implements SwissRxWebV
                     String urlPath = "https://swiss-rx-login.ch/oauth/authorize?response_type=authorization_code&client_id=" + companyId + "&redirect_uri=" + postBackURL + "&scope=anonymous";
                     webView.loadUrl(urlPath);
                     progressBar.setVisibility(View.VISIBLE);
-                    finishedLoading = false;
                 }
             }
         });
@@ -71,6 +67,5 @@ public class IMPSwissRxActivity extends AppCompatActivity implements SwissRxWebV
     @Override
     public void loadingFinished() {
         progressBar.setVisibility(View.GONE);
-        finishedLoading = true;
     }
 }
