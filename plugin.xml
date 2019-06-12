@@ -39,9 +39,6 @@
         <config-file target="AndroidManifest.xml" parent="/manifest/application">
             <activity android:label="Swiss-Rx-Login" android:name="de.impacgroup.swissrxlogin.IMPSwissRxActivity"></activity>
         </config-file>
-        <config-file target="AndroidManifest.xml" parent="/manifest">
-            <activity android:label="Swiss-Rx-Login" android:name="de.impacgroup.swissrxlogin.IMPSwissRxActivity"></activity>
-        </config-file>
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
             <application android:theme="@style/AppTheme" />
         </edit-config>
