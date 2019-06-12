@@ -31,17 +31,21 @@
     </platform>
 
     <platform name="android">        
+        
         <config-file target="config.xml" parent="/*">
             <feature name="SwissRxLogin">
                 <param name="android-package" value="de.impacgroup.swissrxlogin.SwissRxLogin"/>
             </feature>
         </config-file>
-        <config-file target="AndroidManifest.xml" parent="/manifest/application">
-            <activity android:label="Swiss-Rx-Login" android:name="de.impacgroup.swissrxlogin.IMPSwissRxActivity"></activity>
-        </config-file>
+
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
             <application android:theme="@style/AppTheme" />
         </edit-config>
+
+        <config-file target="AndroidManifest.xml" parent="/manifest/application">
+            <activity android:label="Swiss-Rx-Login" android:name="de.impacgroup.swissrxlogin.IMPSwissRxActivity"></activity>
+        </config-file>            
+
         <source-file src="src/android/SwissRxLogin.java" target-dir="src/de/impacgroup/swissrxlogin"/>
         <source-file src="src/android/IMPSwissRxActivity.java" target-dir="src/de/impacgroup/swissrxlogin"/>
         <source-file src="src/android/activity_impswiss_rx.xml" target-dir="res/layout"/>
