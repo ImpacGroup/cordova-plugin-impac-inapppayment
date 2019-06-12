@@ -20,7 +20,6 @@ class SwissRxWebViewClient extends WebViewClient {
 
     @Override
     public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-        Log.d(TAG, "shouldOverrideUrlLoading: " + request.getUrl());
         Uri uri = request.getUrl();
         if (checkURLIsOwn(uri)) {
             listener.userSignedIn();
@@ -31,5 +30,11 @@ class SwissRxWebViewClient extends WebViewClient {
 
     private boolean checkURLIsOwn(Uri uri) {
         return uri.toString().startsWith(postBackURL);
+    }
+
+    @Override
+    public void onPageFinished(WebView view, String url) {
+        listener.loadingFinished();
+        super.onPageFinished(view, url);
     }
 }
