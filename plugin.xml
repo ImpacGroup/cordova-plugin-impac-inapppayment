@@ -43,8 +43,8 @@
         <source-file src="src/android/IMPSwissRxActivity.java" target-dir="src/de/impacgroup/swissrxlogin"/>
         <source-file src="src/android/activity_impswiss_rx.xml" target-dir="res/layout"/>
         <framework src="com.android.support:appcompat-v7:24.1.1"/>
-        <resource-file src="src/android/styles.xml" target="res/values" />
-        <resource-file src="src/android/colors.xml" target="res/values" />
+        <resource-file src="src/android/styles.xml" target="res/values/styles.xml" />
+        <resource-file src="src/android/colors.xml" target="res/values/colors.xml" />
         <hook src="hooks/use.android.theme.js" type="before_compile" />
     </platform>
 </plugin>
