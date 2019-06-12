@@ -43,7 +43,7 @@
             <activity android:label="Swiss-Rx-Login" android:name="de.impacgroup.swissrxlogin.IMPSwissRxActivity"></activity>
         </config-file>
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
-            <application android:theme="@Style/AppTheme" />
+            <application android:theme="@style/AppTheme" />
         </edit-config>
         <source-file src="src/android/SwissRxLogin.java" target-dir="src/de/impacgroup/swissrxlogin"/>
         <source-file src="src/android/IMPSwissRxActivity.java" target-dir="src/de/impacgroup/swissrxlogin"/>
