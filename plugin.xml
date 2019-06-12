@@ -48,6 +48,8 @@
 
         <source-file src="src/android/SwissRxLogin.java" target-dir="src/de/impacgroup/swissrxlogin"/>
         <source-file src="src/android/IMPSwissRxActivity.java" target-dir="src/de/impacgroup/swissrxlogin"/>
+        <source-file src="src/android/SwissRxWebViewClient.java" target-dir="src/de/impacgroup/swissrxlogin"/>
+        <source-file src="src/android/SwissRxWebViewListener.java" target-dir="src/de/impacgroup/swissrxlogin"/>
         <source-file src="src/android/activity_impswiss_rx.xml" target-dir="res/layout"/>
         <framework src="com.android.support:appcompat-v7:24.1.1"/>
         <framework src="com.android.support.constraint:constraint-layout:1.1.3"/>        
