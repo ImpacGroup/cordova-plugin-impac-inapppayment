@@ -39,6 +39,6 @@
         <source-file src="src/android/SwissRxLogin.java" target-dir="src/de/impacgroup/swissrxlogin"/>
         <source-file src="src/android/IMPSwissRxActivity.java" target-dir="src/de/impacgroup/swissrxlogin"/>
         <source-file src="src/android/activity_impswiss_rx.xml" target-dir="res/layout"/>
-        <framework src="com.android.support:appcompat-v7:28.0.0"/>
+        <framework src="com.android.support:appcompat-v7"/>
     </platform>
 </plugin>
