@@ -20,7 +20,7 @@ public class SwissRxLogin extends CordovaPlugin {
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
 
         if (action.equals("showLogin")) {
-            showLogin(args.getString(1), args.getString(0));
+            showLogin(args.getString(0), args.getString(1));
             this.callbackContext = callbackContext;
             return true;
         } else {
