@@ -1,6 +1,7 @@
 package de.impacgroup.swissrxlogin;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -8,7 +9,8 @@ import android.webkit.WebView;
 
 public class IMPSwissRxActivity extends AppCompatActivity implements SwissRxWebViewListener{
 
-    private static final String TAG = "IMPSwissRxActivity";
+    static final String CONST_SIGNEDIN = "Rx_User_Signed_In";
+
     private WebView webView;
     private boolean finishedLoading = false;
     private String companyId = "";
@@ -27,7 +29,7 @@ public class IMPSwissRxActivity extends AppCompatActivity implements SwissRxWebV
         webView = (WebView) findViewById(getResources().getIdentifier("webView", "id", getPackageName()));
         webView.getSettings().setJavaScriptEnabled(true);
 
-        SwissRxWebViewClient webViewClient = new SwissRxWebViewClient(this);
+        SwissRxWebViewClient webViewClient = new SwissRxWebViewClient(this, postBackURL);
         webView.setWebViewClient(webViewClient);
     }
 
@@ -41,5 +43,13 @@ public class IMPSwissRxActivity extends AppCompatActivity implements SwissRxWebV
             webView.loadUrl(urlPath);
             finishedLoading = false;
         }
+    }
+
+    @Override
+    public void userSignedIn() {
+        Intent result = new Intent();
+        result.setData(Uri.parse(CONST_SIGNEDIN));
+        this.setResult(RESULT_OK, result);
+        this.finish();
     }
 }

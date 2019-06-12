@@ -9,6 +9,8 @@ import org.apache.cordova.CordovaPlugin;
 import org.json.JSONArray;
 import org.json.JSONException;
 
+import static android.app.Activity.RESULT_OK;
+
 public class SwissRxLogin extends CordovaPlugin {
 
     static final String CONST_APPID= "appId";
@@ -46,7 +48,11 @@ public class SwissRxLogin extends CordovaPlugin {
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent intent) {
-        callbackContext.success(0);
+        if (resultCode == RESULT_OK) {
+            callbackContext.success(0);
+        } else {
+            callbackContext.error(0);
+        }
         super.onActivityResult(requestCode, resultCode, intent);
     }
 }
