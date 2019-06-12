@@ -19,7 +19,7 @@
         <clobbers target="window.plugins.swissRxLogin" />
     </js-module>
 
-    <platform name="ios">
+    <platform name="ios">   
         <config-file target="config.xml" parent="/*">
             <feature name="SwissRxLogin">
                 <param name="ios-package" value="SwissRxLogin"/>
@@ -39,6 +39,12 @@
         <config-file target="AndroidManifest.xml" parent="/manifest/application">
             <activity android:label="Swiss-Rx-Login" android:name="de.impacgroup.swissrxlogin.IMPSwissRxActivity"></activity>
         </config-file>
+        <config-file target="AndroidManifest.xml" parent="/manifest">
+            <activity android:label="Swiss-Rx-Login" android:name="de.impacgroup.swissrxlogin.IMPSwissRxActivity"></activity>
+        </config-file>
+        <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
+            <application android:theme="@Style/AppTheme" />
+        </edit-config>
         <source-file src="src/android/SwissRxLogin.java" target-dir="src/de/impacgroup/swissrxlogin"/>
         <source-file src="src/android/IMPSwissRxActivity.java" target-dir="src/de/impacgroup/swissrxlogin"/>
         <source-file src="src/android/activity_impswiss_rx.xml" target-dir="res/layout"/>
