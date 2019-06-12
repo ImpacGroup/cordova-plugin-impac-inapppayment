@@ -1,4 +1,3 @@
-
 package de.impacgroup.swissrxlogin;
 
 

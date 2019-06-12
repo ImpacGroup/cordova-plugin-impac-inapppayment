@@ -8,6 +8,6 @@ public class IMPSwissRxActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_impswiss_rx);
+        setContentView(getResources().getIdentifier("activity_impswiss_rx", "layout", getPackageName()));
     }
 }
