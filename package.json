@@ -1,9 +1,9 @@
 {
     "name": "cordova-plugin-swissRxLogin",
     "version": "0.1.0",
-    "description": "An Android Cordova plugin that allows users to sign in with swiss-rx-login to your ios or android application.",
+    "description": "An Cordova plugin for iOS and Android that allows to make in app payments for auto renewable subscriptions.",
     "cordova": {
-      "id": "cordova-plugin-swissRxLogin",
+      "id": "cordova-plugin-impac-inapppayment",
       "platforms": [
         "android",
         "ios"
@@ -11,11 +11,10 @@
     },
     "repository": {
       "type": "git",
-      "url": "git+https://github.com/ImpacGroup/Cordova-PlugIn-Swiss-Rx.git"
+      "url": "git+https://github.com/ImpacGroup/cordova-plugin-impac-inapppayment.git"
     },
     "keywords": [
-      "Swiss Rx",
-      "SignIn",
+      "inapppayment",
       "ecosystem:cordova",
       "cordova-android",
       "cordova-ios"
@@ -23,8 +22,8 @@
     "engines": {
       "cordovaDependencies": {
         "0.1.0": {
-          "cordova-android": ">7.0.0",
-          "cordova-ios": ">4.0.0",
+          "cordova-android": ">8.0.0",
+          "cordova-ios": ">5.0.0",
           "cordova-plugin-android-support-v7-appcompat": "1.0.0"
         }
       }
@@ -32,7 +31,7 @@
     "author": "Felix Nievelstein <fn@impacgroup.de>",
     "license": "MIT",
     "bugs": {
-      "url": "https://github.com/ImpacGroup/Cordova-PlugIn-Swiss-Rx/issues"
+      "url": "https://github.com/ImpacGroup/cordova-plugin-impac-inapppayment/issues"
     },
-    "homepage": "https://github.com/ImpacGroup/Cordova-PlugIn-Swiss-Rx"
+    "homepage": "https://github.com/ImpacGroup/cordova-plugin-impac-inapppayment"
   }
