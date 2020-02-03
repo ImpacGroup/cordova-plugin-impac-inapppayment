@@ -8,8 +8,8 @@
     <license>MIT</license>
 
     <keywords>cordova,android,ios,inapppayment</keywords>
-    <repo>https://github.com/ImpacGroup/Cordova-PlugIn-Swiss-Rx.git</repo>
-    <issue>https://github.com/ImpacGroup/Cordova-PlugIn-Swiss-Rx/issues</issue>
+    <repo>https://github.com/ImpacGroup/cordova-plugin-impac-inapppayment.git</repo>
+    <issue>https://github.com/ImpacGroup/cordova-plugin-impac-inapppayment/issues</issue>
 
     <engines>
         <engine name="cordova" version=">=3.0.0"/>
