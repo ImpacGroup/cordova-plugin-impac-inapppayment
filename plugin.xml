@@ -1,60 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
         xmlns:android="http://schemas.android.com/apk/res/android"
-        id="cordova-plugin-swissRxLogin" version="0.1.0">
-    <name>swissRxLogin</name>
+        id="cordova-plugin-impac-inapppayment" version="0.1.0">
+    <name>impac-inapppayment</name>
 
-    <description>An Android Cordova plugin that allows to sign in with swiss-rx.</description>
+    <description>An Cordova plugin for iOS and Android that allows to make in app payments</description>
     <license>MIT</license>
 
-    <keywords>cordova,android,swiss-rx,swiss,signin,login</keywords>
+    <keywords>cordova,android,ios,inapppayment</keywords>
     <repo>https://github.com/ImpacGroup/Cordova-PlugIn-Swiss-Rx.git</repo>
     <issue>https://github.com/ImpacGroup/Cordova-PlugIn-Swiss-Rx/issues</issue>
-  
+
     <engines>
         <engine name="cordova" version=">=3.0.0"/>
     </engines>
-  
-    <js-module src="www/swissRxLogin.js" name="swissRxLogin">
-        <clobbers target="window.plugins.swissRxLogin" />
+
+    <js-module src="www/impac-inapppayment.js" name="impac-inapppayment">
+        <clobbers target="window.plugins.impac-inapppayment" />
     </js-module>
 
-    <platform name="ios">   
+    <platform name="ios">
         <config-file target="config.xml" parent="/*">
-            <feature name="SwissRxLogin">
-                <param name="ios-package" value="SwissRxLogin"/>
+            <feature name="Impac-Inapppayment">
+                <param name="ios-package" value="impac-inapppayment"/>
             </feature>
         </config-file>
-        <source-file src="src/ios/SwissRxLogin.swift"/>
-        <source-file src="src/ios/IMPSwissRxViewController.swift"/>
-        <source-file src="src/ios/IMPSwissRxViewController.xib"/>
+        <source-file src="src/ios/IMPProduct.swift"/>
+        <source-file src="src/ios/IMPStoreManager.swift"/>
     </platform>
 
-    <platform name="android">        
-        
+    <platform name="android">
+
         <config-file target="config.xml" parent="/*">
-            <feature name="SwissRxLogin">
-                <param name="android-package" value="de.impacgroup.swissrxlogin.SwissRxLogin"/>
+            <feature name="Impac-Inapppayment">
             </feature>
         </config-file>
-
-        <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
-            <application android:theme="@style/AppTheme" />
-        </edit-config>
-
-        <config-file target="AndroidManifest.xml" parent="/manifest/application">
-            <activity android:label="Swiss-Rx-Login" android:name="de.impacgroup.swissrxlogin.IMPSwissRxActivity"></activity>
-        </config-file>            
-
-        <source-file src="src/android/SwissRxLogin.java" target-dir="src/de/impacgroup/swissrxlogin"/>
-        <source-file src="src/android/IMPSwissRxActivity.java" target-dir="src/de/impacgroup/swissrxlogin"/>
-        <source-file src="src/android/SwissRxWebViewClient.java" target-dir="src/de/impacgroup/swissrxlogin"/>
-        <source-file src="src/android/SwissRxWebViewListener.java" target-dir="src/de/impacgroup/swissrxlogin"/>
-        <source-file src="src/android/activity_impswiss_rx.xml" target-dir="res/layout"/>
-        <framework src="com.android.support:appcompat-v7:24.1.1"/>
-        <framework src="com.android.support.constraint:constraint-layout:1.1.3"/>        
-        <resource-file src="src/android/styles.xml" target="res/values/styles.xml" />
-        <resource-file src="src/android/colors.xml" target="res/values/colors.xml" />
-        <hook src="hooks/use.android.theme.js" type="before_compile" />
     </platform>
 </plugin>
