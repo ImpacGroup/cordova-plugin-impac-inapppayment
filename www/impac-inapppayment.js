@@ -3,8 +3,16 @@
 // Empty constructor
 function ImpacInappPayment() {}
 
-ImpacInappPayment.prototype.getProducts = function(successCallback, errorCallback) {
-    cordova.exec(successCallback, this._getErrorCallback(errorCallback, "getProducts"), 'ImpacInappPayment', 'getProducts', [companyId, appID]);
+ImpacInappPayment.prototype.setIds = function(ids) {
+    cordova.exec(null, null, 'ImpacInappPayment', 'setIds', [ids]);
+}
+
+ImpacInappPayment.prototype.getProducts = function(successCallback) {
+    cordova.exec(successCallback, null, 'ImpacInappPayment', 'getProducts', []);
+}
+
+ImpacInappPayment.prototype.buyProduct = function(successCallback, errorCallback, productID, accessToken, url) {
+    cordova.exec(successCallback, this._getErrorCallback(errorCallback, "buyProduct"), 'ImpacInappPayment', 'buyProduct', [productID, accessToken, url]);
 }
 
 ImpacInappPayment.prototype._getErrorCallback = function (ecb, functionName) {
