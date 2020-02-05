@@ -19,8 +19,8 @@ struct updateMessage: Codable {
     private var onUpdateCallbackId: String?
     
     @objc(setIds:) func setIds(command: CDVInvokedUrlCommand) {
-        if command.arguments.count == 1, let ids = command.arguments[0] as? Set<String> {
-            IMPStoreManager.shared.set(productIDs: ids)
+        if command.arguments.count == 1, let ids = command.arguments[0] as? [String] {
+            IMPStoreManager.shared.set(productIDs: Set(ids))
         } else {
             print("ImpacInappPayment: Invalid arguments, missing string array with ids")
         }
