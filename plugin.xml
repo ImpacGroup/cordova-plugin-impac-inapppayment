@@ -16,13 +16,13 @@
     </engines>
 
     <js-module src="www/impac-inapppayment.js" name="impac-inapppayment">
-        <clobbers target="window.plugins.impac-inapppayment" />
+        <clobbers target="window.plugins.impacInappPayment" />
     </js-module>
 
     <platform name="ios">
         <config-file target="config.xml" parent="/*">
-            <feature name="Impac-Inapppayment">
-                <param name="ios-package" value="impac-inapppayment"/>
+            <feature name="ImpacInappPayment">
+                <param name="ios-package" value="ImpacInappPayment"/>
             </feature>
         </config-file>
         <source-file src="src/ios/IMPProduct.swift"/>
