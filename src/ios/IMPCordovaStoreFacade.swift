@@ -17,6 +17,7 @@ struct updateMessage: Codable {
     
     private var loadProductsCallbackId: String?
     private var onUpdateCallbackId: String?
+    private var config: IMPValidationConfig?
     
     @objc(setIds:) func setIds(command: CDVInvokedUrlCommand) {
         if command.arguments.count == 1, let ids = command.arguments[0] as? [String] {
@@ -30,6 +31,15 @@ struct updateMessage: Codable {
         onUpdateCallbackId = command.callbackId
     }
     
+    @objc(setValidation:) func setValidation(command: CDVInvokedUrlCommand) {
+        if command.arguments.count == 2, let accessToken = command.arguments[0] as? String, let url = command.arguments[1] as? String {
+            config = IMPValidationConfig(url: url, accessToken: accessToken)
+            IMPStoreManager.shared.setValidationConfig(config: config!)
+        } else {
+            print("ImpacInappPayment: Invalid arguments, missing accessToken and url")
+        }
+    }
+    
     @objc(getProducts:) func getProducts(command: CDVInvokedUrlCommand) {
         IMPStoreManager.shared.delegate = self
         loadProductsCallbackId = command.callbackId
@@ -37,8 +47,14 @@ struct updateMessage: Codable {
     }
     
     @objc(buyProduct:) func buyProduct(command: CDVInvokedUrlCommand) {
-        if command.arguments.count == 3, let productId = command.arguments[0] as? String, let accessToken = command.arguments[1] as? String, let url = command.arguments[2] as? String {
-            IMPStoreManager.shared.buyProduct(productId: productId, config: IMPValidationConfig(url: url, accessToken: accessToken))
+        if command.arguments.count == 1, let productId = command.arguments[0] as? String {
+            if let mConfig = config {
+                IMPStoreManager.shared.buyProduct(productId: productId, config: mConfig)
+            } else {
+                print("ImpacInappPayment: Missing validation configuration. Did you set validation configuration?")
+            }
+        } else {
+            print("ImpacInappPayment: Invalid arguments, missing product id")
         }
     }
 }
