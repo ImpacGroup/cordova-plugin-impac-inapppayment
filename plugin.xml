@@ -27,6 +27,9 @@
         </config-file>
         <source-file src="src/ios/IMPProduct.swift"/>
         <source-file src="src/ios/IMPStoreManager.swift"/>
+        <source-file src="src/ios/IMPCordovaStoreFacade.swift"/>
+        <source-file src="src/ios/IMPValidationConfig.swift"/>
+        <source-file src="src/ios/IMPValidationController.swift"/>
     </platform>
 
     <platform name="android">
