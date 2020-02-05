@@ -1,5 +1,5 @@
 {
-    "name": "cordova-plugin-swissRxLogin",
+    "name": "cordova-plugin-impac-inapppayment",
     "version": "0.1.0",
     "description": "An Cordova plugin for iOS and Android that allows to make in app payments for auto renewable subscriptions.",
     "cordova": {
