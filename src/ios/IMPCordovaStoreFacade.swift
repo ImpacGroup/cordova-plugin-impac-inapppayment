@@ -9,9 +9,15 @@
 import Foundation
 import Cordova
 
+struct updateMessage: Codable {
+    let prodcut: IMPProduct
+    let status: String
+}
+
 @objc (ImpacInappPayment) class ImpacInappPayment: CDVPlugin {
     
     private var loadProductsCallbackId: String?
+    private var onUpdateCallbackId: String?
     
     @objc(setIds:) func setIds(command: CDVInvokedUrlCommand) {
         if command.arguments.count == 1, let ids = command.arguments[0] as? Set<String> {
@@ -19,6 +25,10 @@ import Cordova
         } else {
             print("ImpacInappPayment: Invalid arguments, missing string array with ids")
         }
+    }
+    
+    @objc(onUpdate:) func onUpdate(command: CDVInvokedUrlCommand) {
+        onUpdateCallbackId = command.callbackId
     }
     
     @objc(getProducts:) func getProducts(command: CDVInvokedUrlCommand) {
@@ -36,16 +46,23 @@ import Cordova
 
 extension ImpacInappPayment: IMPStoreManagerDelegate {
     
-    func userViolation(receipt: String) {
-        
+    func userViolation(receipt: String, product: IMPProduct) {
+        let result = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: product.id)
+        result?.keepCallback = true
+        self.commandDelegate.send(result, callbackId: onUpdateCallbackId)
+        loadProductsCallbackId = nil
     }
     
-    func finishedPurchasingProcess(success: Bool) {
-        
+    func finishedPurchasingProcess(success: Bool, product: IMPProduct) {
+        let result = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: product.id)
+        result?.keepCallback = true
+        self.commandDelegate.send(result, callbackId: onUpdateCallbackId)
+        loadProductsCallbackId = nil
     }
     
-    func didPauseTransaction() {
-        
+    func didPauseTransaction(product: IMPProduct) {
+        let result = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: product.id)
+        result?.keepCallback = true
     }
     
     func productsLoaded(products: [IMPProduct]) {

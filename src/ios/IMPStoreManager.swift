@@ -15,13 +15,13 @@ protocol IMPStoreManagerDelegate: class {
     func productsLoaded(products: [IMPProduct])
     
     // Get called if a transaction process finished.
-    func finishedPurchasingProcess(success: Bool)
+    func finishedPurchasingProcess(success: Bool, product: IMPProduct)
     
     // Get called if a transaction end for the moment. As Example waiting for approvel for transaction.
-    func didPauseTransaction()
+    func didPauseTransaction(product: IMPProduct)
     
     // Get called if a user violation accured for a receipt.
-    func userViolation(receipt: String)
+    func userViolation(receipt: String, product: IMPProduct)
 }
 
 class IMPStoreManager: NSObject, SKPaymentTransactionObserver {
@@ -53,37 +53,41 @@ class IMPStoreManager: NSObject, SKPaymentTransactionObserver {
     
     func paymentQueue(_ queue: SKPaymentQueue, updatedTransactions transactions: [SKPaymentTransaction]) {
         for transaction in transactions {
+            print(transaction.payment.productIdentifier)
             switch transaction.transactionState {
             case .purchased:
-                print("To Validate")
-                if let receipt = loadReceipt(), let config = currentConfig {
-                    checkReceipt(receipt: receipt, config: config) { [weak self] (success) in
+                if let receipt = loadReceipt(), let config = currentConfig, let product = getProductBy(id: transaction.payment.productIdentifier) {
+                    checkReceipt(receipt: receipt, for: product, config: config) { [weak self] (success) in
                         guard let strongSelf = self else { return }
                         queue.finishTransaction(transaction)
                         if success {
-                            strongSelf.endTransaction(success: success)
+                            strongSelf.endTransaction(success: success, product: product)
                         }
                     }
                 }
             case .deferred:
                 DispatchQueue.main.async { [weak self] in
                     guard let strongSelf = self else { return }
-                    strongSelf.delegate?.didPauseTransaction()
+                    if let mProduct = strongSelf.getProductBy(id: transaction.payment.productIdentifier) {
+                        strongSelf.delegate?.didPauseTransaction(product: IMPProduct.from(skProduct: mProduct))
+                    }
                 }
             case .restored:
-                print("Restored")
+                break
             case .failed:
-                endTransaction(success: false)
+                if let mProduct = getProductBy(id: transaction.payment.productIdentifier) {
+                    endTransaction(success: false, product: mProduct)
+                }
             default:
                 print(transaction)
             }
         }
     }
     
-    private func endTransaction(success: Bool) {
+    private func endTransaction(success: Bool, product: SKProduct) {
         DispatchQueue.main.async { [weak self] in
             guard let strongSelf = self else { return }
-            strongSelf.delegate?.finishedPurchasingProcess(success: success)
+            strongSelf.delegate?.finishedPurchasingProcess(success: success, product: IMPProduct.from(skProduct: product))
         }
     }
     
@@ -101,26 +105,30 @@ class IMPStoreManager: NSObject, SKPaymentTransactionObserver {
         return nil
     }
     
-    private func checkReceipt(receipt: String, config: IMPValidationConfig, completion: @escaping (Bool) -> Void ) {
+    private func checkReceipt(receipt: String, for product: SKProduct, config: IMPValidationConfig, completion: @escaping (Bool) -> Void ) {
         validationController.validateReceipt(receipt: receipt, validationInfo: config) { [weak self] (success, userViolation) in
-            completion(success)
-            guard let strongSelf = self else { return }
             if userViolation {
+                guard let strongSelf = self else { return }
                 DispatchQueue.main.async {
-                    strongSelf.delegate?.userViolation(receipt: receipt)
+                    strongSelf.delegate?.userViolation(receipt: receipt, product: IMPProduct.from(skProduct: product))
                 }
             }
+            completion(success)
         }
     }
     
     public func buyProduct(productId: String, config: IMPValidationConfig) {
         currentConfig = config
-        if let mProduct = products.first(where: { (prod) -> Bool in
-            return prod.productIdentifier == productId
-        }) {
+        if let mProduct = getProductBy(id: productId) {
             let payment = SKMutablePayment(product: mProduct)
             SKPaymentQueue.default().add(payment)
         }
+    }
+    
+    private func getProductBy(id: String) -> SKProduct? {
+        return products.first(where: { (prod) -> Bool in
+            return prod.productIdentifier == id
+        })
     }
     
     public func setValidationConfig(config: IMPValidationConfig) {
@@ -135,7 +143,7 @@ extension IMPStoreManager: SKProductsRequestDelegate {
         var products: [IMPProduct] = []
         self.products = response.products
         for product in response.products {
-            products.append(IMPProduct(id: product.productIdentifier, localizedTitle: product.localizedTitle, localizedDescription: product.localizedDescription, price: product.price, priceLocale: product.priceLocale))
+            products.append(IMPProduct.from(skProduct: product))
         }
         
         if response.invalidProductIdentifiers.count > 0 {

@@ -7,11 +7,16 @@
 //
 
 import Foundation
+import StoreKit
 
-struct IMPProduct {
+struct IMPProduct: Codable {
     let id: String
     let localizedTitle: String
     let localizedDescription: String
-    let price: NSDecimalNumber
+    let price: String
     let priceLocale: Locale
+    
+    public static func from(skProduct: SKProduct) -> IMPProduct {
+        return IMPProduct(id: skProduct.productIdentifier, localizedTitle: skProduct.localizedTitle, localizedDescription: skProduct.localizedDescription, price: String(describing: skProduct.price), priceLocale: skProduct.priceLocale)
+    }
 }
