@@ -7,12 +7,16 @@ ImpacInappPayment.prototype.setIds = function(ids) {
     cordova.exec(null, null, 'ImpacInappPayment', 'setIds', [ids]);
 }
 
+ImpacInappPayment.prototype.setValidation = function(accessToken, url) {
+    cordova.exec(null, null, 'ImpacInappPayment', 'setValidation', [accessToken, url]);
+}
+
 ImpacInappPayment.prototype.getProducts = function(successCallback) {
     cordova.exec(successCallback, null, 'ImpacInappPayment', 'getProducts', []);
 }
 
-ImpacInappPayment.prototype.buyProduct = function(productID, accessToken, url) {
-    cordova.exec(null, null, 'ImpacInappPayment', 'buyProduct', [productID, accessToken, url]);
+ImpacInappPayment.prototype.buyProduct = function(productID) {
+    cordova.exec(null, null, 'ImpacInappPayment', 'buyProduct', [productID]);
 }
 
 ImpacInappPayment.prototype.onUpdate = function(successCallback) {
