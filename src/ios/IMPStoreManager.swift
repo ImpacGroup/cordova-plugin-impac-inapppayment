@@ -53,7 +53,6 @@ class IMPStoreManager: NSObject, SKPaymentTransactionObserver {
     
     func paymentQueue(_ queue: SKPaymentQueue, updatedTransactions transactions: [SKPaymentTransaction]) {
         for transaction in transactions {
-            print(transaction.payment.productIdentifier)
             switch transaction.transactionState {
             case .purchased:
                 if let receipt = loadReceipt(), let config = currentConfig, let product = getProductBy(id: transaction.payment.productIdentifier) {
@@ -96,7 +95,6 @@ class IMPStoreManager: NSObject, SKPaymentTransactionObserver {
             do {
                 let rawReceiptData = try Data.init(contentsOf: appStoreReceiptURL)
                 let receiptData = rawReceiptData.base64EncodedString()
-                print(receiptData)
                 return receiptData
             } catch {
                 print(error)

@@ -8,7 +8,7 @@
 
 import Foundation
 
-struct updateMessage: Codable {
+struct IMPUpdateMessage: Codable {
     let prodcut: IMPProduct
     let status: String
 }
@@ -62,22 +62,32 @@ struct updateMessage: Codable {
 extension ImpacInappPayment: IMPStoreManagerDelegate {
     
     func userViolation(receipt: String, product: IMPProduct) {
-        let result = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: product.id)
-        result?.keepCallback = true
-        self.commandDelegate.send(result, callbackId: onUpdateCallbackId)
-        loadProductsCallbackId = nil
+        print("userViolation")
+        let message = IMPUpdateMessage(prodcut: product, status: "userViolation")
+        sendUpdateMessage(message: message)
+    }
+    
+    private func sendUpdateMessage(message: IMPUpdateMessage) {
+        do {
+            let jsonData = try JSONEncoder().encode(message)
+            let result = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: String(data: jsonData, encoding: .utf8))
+            result?.keepCallback = true
+            self.commandDelegate.send(result, callbackId: onUpdateCallbackId)
+        } catch  {
+            print(error)
+        }
     }
     
     func finishedPurchasingProcess(success: Bool, product: IMPProduct) {
-        let result = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: product.id)
-        result?.keepCallback = true
-        self.commandDelegate.send(result, callbackId: onUpdateCallbackId)
-        loadProductsCallbackId = nil
+        print("finishedPurchasingProcess")
+        let message = IMPUpdateMessage(prodcut: product, status: "finished")
+        sendUpdateMessage(message: message)
     }
     
     func didPauseTransaction(product: IMPProduct) {
-        let result = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: product.id)
-        result?.keepCallback = true
+        print("didPauseTransaction")
+        let message = IMPUpdateMessage(prodcut: product, status: "didPause")
+        sendUpdateMessage(message: message)
     }
     
     func productsLoaded(products: [IMPProduct]) {
