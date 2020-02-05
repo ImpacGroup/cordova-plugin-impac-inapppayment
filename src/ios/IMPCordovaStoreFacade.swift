@@ -65,9 +65,14 @@ extension ImpacInappPayment: IMPStoreManagerDelegate {
     }
     
     func productsLoaded(products: [IMPProduct]) {
-        let result = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: products)
-        self.commandDelegate.send(result, callbackId: loadProductsCallbackId)
-        loadProductsCallbackId = nil
+        do {
+            let jsonData = try JSONEncoder().encode(products)
+            let result = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: String(data: jsonData, encoding: .utf8))
+            self.commandDelegate.send(result, callbackId: loadProductsCallbackId)
+            loadProductsCallbackId = nil
+        } catch  {
+            print(error)
+        }
     }
     
 }
