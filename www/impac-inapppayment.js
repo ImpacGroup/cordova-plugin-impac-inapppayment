@@ -16,7 +16,7 @@ ImpacInappPayment.prototype.buyProduct = function(productID, accessToken, url) {
 }
 
 ImpacInappPayment.prototype.onUpdate = function(successCallback) {
-    cordova.exec(successCallback, null, 'ImpacInappPayment', 'onUpdate', [productID, accessToken, url]);
+    cordova.exec(successCallback, null, 'ImpacInappPayment', 'onUpdate', []);
 }
 
 ImpacInappPayment.prototype._getErrorCallback = function (ecb, functionName) {
