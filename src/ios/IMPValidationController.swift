@@ -95,7 +95,6 @@ class IMPValidationController: NSObject {
     //Prüft den Status Code und reagiert auf den StatusCode entsrpechend.
     private func handleResponseCode(responseCode: Int, repeatCall: Bool, requestIsGetToken: Bool, completion: @escaping (_ success: Bool, _ repeat: Bool,_ error: [String: String]?) -> Void)
     {
-        print(responseCode)
         switch responseCode
         {
         case 200, 201, 202:

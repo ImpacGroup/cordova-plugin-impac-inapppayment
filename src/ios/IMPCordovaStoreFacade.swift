@@ -19,7 +19,11 @@ struct IMPUpdateMessage: Codable {
     private var onUpdateCallbackId: String?
     private var config: IMPValidationConfig?
     
+    /**
+     Sets the product ids which should be supported. IMPORTANT: This must be called as early as possible. Otherwise you will get no feedback on your subscriptions.
+     */
     @objc(setIds:) func setIds(command: CDVInvokedUrlCommand) {
+        IMPStoreManager.shared.delegate = self
         if command.arguments.count == 1, let ids = command.arguments[0] as? [String] {
             IMPStoreManager.shared.set(productIDs: Set(ids))
         } else {
@@ -27,11 +31,19 @@ struct IMPUpdateMessage: Codable {
         }
     }
     
+    /**
+     Adds listener to changes for the registered product ids. IMPORTANT: This must be called directly after setIds. Otherwise you will get no feedback on your subscriptions.
+     */
     @objc(onUpdate:) func onUpdate(command: CDVInvokedUrlCommand) {
+        IMPStoreManager.shared.delegate = self
         onUpdateCallbackId = command.callbackId
     }
     
+    /**
+    Adds the configuration for the validation. The configuration must have an access token and url to validate against.
+     */
     @objc(setValidation:) func setValidation(command: CDVInvokedUrlCommand) {
+        IMPStoreManager.shared.delegate = self
         if command.arguments.count == 2, let accessToken = command.arguments[0] as? String, let url = command.arguments[1] as? String {
             config = IMPValidationConfig(url: url, accessToken: accessToken)
             IMPStoreManager.shared.setValidationConfig(config: config!)
@@ -40,13 +52,20 @@ struct IMPUpdateMessage: Codable {
         }
     }
     
+    /**
+     Returns a list of products based on the registrated product ids.
+     */
     @objc(getProducts:) func getProducts(command: CDVInvokedUrlCommand) {
         IMPStoreManager.shared.delegate = self
         loadProductsCallbackId = command.callbackId
         IMPStoreManager.shared.loadProducts()
     }
     
+    /**
+     Buy product by id. Note that product id must be in one of the registrated ids.
+     */
     @objc(buyProduct:) func buyProduct(command: CDVInvokedUrlCommand) {
+        IMPStoreManager.shared.delegate = self
         if command.arguments.count == 1, let productId = command.arguments[0] as? String {
             if let mConfig = config {
                 IMPStoreManager.shared.buyProduct(productId: productId, config: mConfig)
@@ -62,7 +81,6 @@ struct IMPUpdateMessage: Codable {
 extension ImpacInappPayment: IMPStoreManagerDelegate {
     
     func userViolation(receipt: String, product: IMPProduct) {
-        print("userViolation")
         let message = IMPUpdateMessage(prodcut: product, status: "userViolation")
         sendUpdateMessage(message: message)
     }
@@ -79,13 +97,11 @@ extension ImpacInappPayment: IMPStoreManagerDelegate {
     }
     
     func finishedPurchasingProcess(success: Bool, product: IMPProduct) {
-        print("finishedPurchasingProcess")
         let message = IMPUpdateMessage(prodcut: product, status: "finished")
         sendUpdateMessage(message: message)
     }
     
     func didPauseTransaction(product: IMPProduct) {
-        print("didPauseTransaction")
         let message = IMPUpdateMessage(prodcut: product, status: "didPause")
         sendUpdateMessage(message: message)
     }
