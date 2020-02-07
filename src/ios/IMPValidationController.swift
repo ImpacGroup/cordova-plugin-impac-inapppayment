@@ -21,14 +21,16 @@ class IMPValidationController: NSObject {
         let headers = ["Authorization": "Bearer \(validationInfo.accessToken)", "Content-Type": "application/json"]
         if let json = getJSONObject(data: ["receipt" : receipt]) {
             performRequestWith(url: validationInfo.url, method: .post, parameters: json, headers: headers) { (result) in
-                let success = result["success"] as! Bool
-                let userViolation = result["userViolation"] as! Bool
-                completion(success, userViolation)
+                if let success = result["success"] as? Bool, let userViolation = result["userViolation"] as? Bool {
+                    completion(success, userViolation)
+                } else {
+                    completion(false, false)
+                }
             }
         } else {
             completion(false, false)
         }
-    }
+    }        
 
     // MARK - Hanlde api call native without external framework.
     

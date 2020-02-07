@@ -9,7 +9,7 @@
 import Foundation
 
 struct IMPUpdateMessage: Codable {
-    let prodcut: IMPProduct
+    let prodcut: IMPProduct?
     let status: String
 }
 
@@ -18,6 +18,11 @@ struct IMPUpdateMessage: Codable {
     private var loadProductsCallbackId: String?
     private var onUpdateCallbackId: String?
     private var config: IMPValidationConfig?
+    
+    @objc(canMakePayments:) func canMakePayments(command: CDVInvokedUrlCommand) {
+        let result = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: IMPStoreManager.shared.canMakePayments())
+        self.commandDelegate.send(result, callbackId: command.callbackId)
+    }
     
     /**
      Sets the product ids which should be supported. IMPORTANT: This must be called as early as possible. Otherwise you will get no feedback on your subscriptions.
@@ -76,11 +81,21 @@ struct IMPUpdateMessage: Codable {
             print("ImpacInappPayment: Invalid arguments, missing product id")
         }
     }
+    
+    @objc(refreshStatus:) func refreshStatus(command: CDVInvokedUrlCommand) {
+        IMPStoreManager.shared.delegate = self
+        IMPStoreManager.shared.refreshStatus()
+    }
 }
 
 extension ImpacInappPayment: IMPStoreManagerDelegate {
     
-    func userViolation(receipt: String, product: IMPProduct) {
+    func refreshedReceipt(receipt: String) {
+        let message = IMPUpdateMessage(prodcut: nil, status: "refreshedReceipt")
+        sendUpdateMessage(message: message)
+    }
+    
+    func userViolation(receipt: String, product: IMPProduct?) {
         let message = IMPUpdateMessage(prodcut: product, status: "userViolation")
         sendUpdateMessage(message: message)
     }

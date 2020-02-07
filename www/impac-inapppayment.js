@@ -23,6 +23,14 @@ ImpacInappPayment.prototype.onUpdate = function(successCallback) {
     cordova.exec(successCallback, null, 'ImpacInappPayment', 'onUpdate', []);
 }
 
+ImpacInappPayment.prototype.canMakePayments = function(successCallback) {
+    cordova.exec(successCallback, null, 'ImpacInappPayment', 'canMakePayments', []);
+}
+
+ImpacInappPayment.prototype.refreshStatus = function() {
+    cordova.exec(null, null, 'ImpacInappPayment', 'refreshStatus', []);
+}
+
 ImpacInappPayment.prototype._getErrorCallback = function (ecb, functionName) {
     if (typeof ecb === 'function') {
         return ecb;

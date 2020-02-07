@@ -21,7 +21,10 @@ protocol IMPStoreManagerDelegate: class {
     func didPauseTransaction(product: IMPProduct)
     
     // Get called if a user violation accured for a receipt.
-    func userViolation(receipt: String, product: IMPProduct)
+    func userViolation(receipt: String, product: IMPProduct?)
+    
+    // Get called if a user violation accured for a receipt.
+    func refreshedReceipt(receipt: String)
 }
 
 class IMPStoreManager: NSObject, SKPaymentTransactionObserver {
@@ -51,6 +54,16 @@ class IMPStoreManager: NSObject, SKPaymentTransactionObserver {
         return SKPaymentQueue.canMakePayments()
     }
     
+    public func refreshStatus() {
+        if let _ = loadReceipt() {
+            let refreshRequest = SKReceiptRefreshRequest()
+            refreshRequest.delegate = self
+            refreshRequest.start()
+        } else {
+            print("No receipt to refresh")
+        }
+    }
+    
     func paymentQueue(_ queue: SKPaymentQueue, updatedTransactions transactions: [SKPaymentTransaction]) {
         for transaction in transactions {
             switch transaction.transactionState {
@@ -78,7 +91,7 @@ class IMPStoreManager: NSObject, SKPaymentTransactionObserver {
                     endTransaction(success: false, product: mProduct)
                 }
             default:
-                print(transaction)
+                break
             }
         }
     }
@@ -103,12 +116,12 @@ class IMPStoreManager: NSObject, SKPaymentTransactionObserver {
         return nil
     }
     
-    private func checkReceipt(receipt: String, for product: SKProduct, config: IMPValidationConfig, completion: @escaping (Bool) -> Void ) {
+    private func checkReceipt(receipt: String, for product: SKProduct?, config: IMPValidationConfig, completion: @escaping (Bool) -> Void ) {
         validationController.validateReceipt(receipt: receipt, validationInfo: config) { [weak self] (success, userViolation) in
             if userViolation {
                 guard let strongSelf = self else { return }
                 DispatchQueue.main.async {
-                    strongSelf.delegate?.userViolation(receipt: receipt, product: IMPProduct.from(skProduct: product))
+                    strongSelf.delegate?.userViolation(receipt: receipt, product: product != nil ? IMPProduct.from(skProduct: product!) : nil)
                 }
             }
             completion(success)
@@ -155,5 +168,21 @@ extension IMPStoreManager: SKProductsRequestDelegate {
             guard let strongSelf = self else { return }
             strongSelf.delegate?.productsLoaded(products: products)
         }
+    }
+    
+    func requestDidFinish(_ request: SKRequest) {
+        print(request)
+        if let _ = request as? SKReceiptRefreshRequest, let receipt = loadReceipt(), let config = currentConfig {
+            checkReceipt(receipt: receipt, for: nil, config: config) { [weak self] (success) in
+                guard let strongSelf = self else { return }
+                DispatchQueue.main.async {
+                    strongSelf.delegate?.refreshedReceipt(receipt: receipt)
+                }
+            }
+        }
+    }
+    
+    func request(_ request: SKRequest, didFailWithError error: Error) {
+        print(error)
     }
 }
