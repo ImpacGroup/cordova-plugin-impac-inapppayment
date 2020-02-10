@@ -35,8 +35,13 @@
     <platform name="android">
 
         <config-file target="config.xml" parent="/*">
-            <feature name="Impac-Inapppayment">
+            <feature name="ImpacInappPayment">
+                <param name="android-package" value="de.impacgroup.inapppayment.ImpacInAppPayment" />
             </feature>
         </config-file>
+
+        <source-file src="src/android/ImpacInAppPayment.java" target-dir="src/de/impacgroup/inapppayment"/>
+        <source-file src="src/android/IMPBillingManager.java" target-dir="src/de/impacgroup/inapppayment"/>
+        <framework src="com.android.billingclient:billing:2.1.0"/>
     </platform>
 </plugin>
