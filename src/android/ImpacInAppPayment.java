@@ -29,26 +29,31 @@ public class ImpacInAppPayment extends CordovaPlugin {
 
     @Override
     public boolean execute(String action, JSONArray args, final CallbackContext callbackContext) throws JSONException {
-        if (action.equals("getProducts")) {
-            billingManager.getProducts(new IMPBillingManagerProductListener() {
-                @Override
-                public void productsLoaded(List<IMPProduct> list) {
-                    String json = new Gson().toJson(list);
-                    callbackContext.success(json);
+        switch (action) {
+            case "getProducts":
+                billingManager.getProducts(new IMPBillingManagerProductListener() {
+                    @Override
+                    public void productsLoaded(List<IMPProduct> list) {
+                        String json = new Gson().toJson(list);
+                        callbackContext.success(json);
+                    }
+                });
+                return true;
+            case "setIds":
+                JSONArray jsonIds = args.getJSONArray(0);
+                if (jsonIds != null) {
+                    setIds(jsonIds);
                 }
-            });
-            return true;
-        } else if (action.equals("setIds")) {
-            JSONArray jsonIds = args.getJSONArray(0);
-            if (jsonIds != null) {
-                setIds(jsonIds);
-            }
-            return true;
-        } else if (action.equals("buyProduct")) {
-            billingManager.buyProduct(args.getString(0), cordova.getActivity());
-            return true;
-        } else {
-            callbackContext.error("\"" + action + "\" is not a recognized action.");
+                return true;
+            case "buyProduct":
+                billingManager.buyProduct(args.getString(0), cordova.getActivity());
+                return true;
+            case "canMakePayments":
+                callbackContext.success(1);
+                return true;
+            default:
+                callbackContext.error("\"" + action + "\" is not a recognized action.");
+                break;
         }
         return false;
     }
@@ -57,7 +62,9 @@ public class ImpacInAppPayment extends CordovaPlugin {
         ArrayList<String> listIds = new ArrayList<>();
         for (int i = 0; i < jsonArray.length(); i++) {
             try {
-                listIds.add(jsonArray.getString(i));
+                if (jsonArray.getString(i) != null && !jsonArray.getString(i).isEmpty()) {
+                    listIds.add(jsonArray.getString(i));
+                }
             } catch (JSONException e) {
                 e.printStackTrace();
             }
