@@ -24,7 +24,7 @@ public class IMPBillingManager implements PurchasesUpdatedListener {
     private SkuDetailsParams.Builder skuParamsBuilder;
 
     IMPBillingManager(Context context) {
-        billingClient = BillingClient.newBuilder(context).setListener(this).build();
+        billingClient = BillingClient.newBuilder(context).setListener(this).enablePendingPurchases().build();
 
         billingClient.startConnection(new BillingClientStateListener() {
             @Override
