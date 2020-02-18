@@ -68,6 +68,8 @@ public class IMPBillingManager implements PurchasesUpdatedListener {
 
     private void handlePurchase(Purchase purchase) {
         Log.d(TAG, "handlePurchase: " + purchase.getPurchaseToken());
+        Log.d(TAG, "handlePurchase: " + purchase.getSku());
+        Log.d(TAG, "handlePurchase: " + purchase.getPackageName());
     }
 
     void getProducts(final IMPBillingManagerProductListener listener) {
