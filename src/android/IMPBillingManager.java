@@ -90,7 +90,7 @@ public class IMPBillingManager implements PurchasesUpdatedListener {
     void setIDs(List<String> ids) {
         Log.d(TAG, "setIDs: " + ids);
         skuParamsBuilder = SkuDetailsParams.newBuilder();
-        skuParamsBuilder.setSkusList(ids).setType(BillingClient.SkuType.INAPP);
+        skuParamsBuilder.setSkusList(ids).setType(BillingClient.SkuType.SUBS);
     }
 
     void buyProduct(String id, Activity activity) {
