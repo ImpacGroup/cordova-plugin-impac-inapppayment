@@ -18,9 +18,19 @@ import com.android.billingclient.api.PurchasesUpdatedListener;
 import com.android.billingclient.api.SkuDetails;
 import com.android.billingclient.api.SkuDetailsParams;
 import com.android.billingclient.api.SkuDetailsResponseListener;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.apache.cordova.Whitelist.TAG;
 
@@ -30,8 +40,16 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
     private SkuDetailsParams.Builder skuParamsBuilder;
     private List<SkuDetails> skuDetails;
 
+    private Purchase purchaseForAcknowlegde;
+
+    // http config stuff
+    private String accessToken;
+    private String url;
+    private RequestQueue queue;
+
     IMPBillingManager(Context context) {
         billingClient = BillingClient.newBuilder(context).setListener(this).enablePendingPurchases().build();
+        queue = Volley.newRequestQueue(context);
 
         billingClient.startConnection(new BillingClientStateListener() {
             @Override
@@ -43,12 +61,7 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
                     Log.d(TAG, "onBillingSetupFinished: " + billingResult.getResponseCode());
                 }
 
-                Log.d(TAG, "IMPAC Loading purchases");
-                Purchase.PurchasesResult purchasesResult = billingClient.queryPurchases(BillingClient.SkuType.SUBS);
-                List<Purchase> purchases = purchasesResult.getPurchasesList();
-                for (Purchase purchase : purchases) {
-                    Log.d(TAG, "purchases: " + purchase.getSku() + " " + purchase.getOrderId() + " " + purchase.getPurchaseToken());
-                }
+                refreshStatus();
             }
             @Override
             public void onBillingServiceDisconnected() {
@@ -76,6 +89,21 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
         }
     }
 
+    public void refreshStatus() {
+        Log.d(TAG, "IMPAC Loading purchases");
+        Purchase.PurchasesResult purchasesResult = billingClient.queryPurchases(BillingClient.SkuType.SUBS);
+        List<Purchase> purchases = purchasesResult.getPurchasesList();
+        for (Purchase purchase : purchases) {
+            Log.d(TAG, "purchases: " + purchase.getSku() + " " + purchase.getOrderId() + " " + purchase.getPurchaseToken());
+            sendPurchaseToAPI(purchase);
+        }
+    }
+
+    public void setValidation(String accessToken, String url) {
+        this.accessToken = accessToken;
+        this.url = url;
+    }
+
     private void handlePurchase(Purchase purchase) {
         Log.d(TAG, "handlePurchase: " + purchase.getPurchaseToken());
         Log.d(TAG, "handlePurchase: " + purchase.getSku());
@@ -83,9 +111,6 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
 
         Log.d(TAG, "handlePurchase: " + (purchase.getPurchaseState() == PurchaseState.PURCHASED));
         if (purchase.getPurchaseState() == PurchaseState.PURCHASED) {
-            // Grant entitlement to the user.
-            // TODO
-
             Log.d(TAG, "handlePurchase: " + purchase.isAcknowledged());
             // Acknowledge the purchase if it hasn't already been acknowledged.
             if (!purchase.isAcknowledged()) {
@@ -93,7 +118,10 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
                         AcknowledgePurchaseParams.newBuilder()
                                 .setPurchaseToken(purchase.getPurchaseToken())
                                 .build();
+                this.purchaseForAcknowlegde = purchase;
                 billingClient.acknowledgePurchase(acknowledgePurchaseParams, this);
+            } else {
+                sendPurchaseToAPI(purchase);
             }
         }
     }
@@ -141,5 +169,47 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
     @Override
     public void onAcknowledgePurchaseResponse(BillingResult billingResult) {
         Log.d(TAG, "onAcknowledgePurchaseResponse: " + billingResult.getResponseCode());
+        this.sendPurchaseToAPI(this.purchaseForAcknowlegde);
+    }
+
+    private void sendPurchaseToAPI(Purchase purchase) {
+
+        if (purchase != null && this.accessToken != null && this.url != null) {
+            Map<String, String> data = new HashMap<String, String>();
+            data.put("purchaseToken", purchase.getPurchaseToken());
+            data.put("productId", purchase.getSku());
+
+            JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, this.url, new JSONObject(data),
+                    new Response.Listener<JSONObject>()
+                    {
+                        @Override
+                        public void onResponse(JSONObject response) {
+                            // response
+                            Log.d("Response", response.toString());
+                        }
+                    },
+                    new Response.ErrorListener()
+                    {
+                        @Override
+                        public void onErrorResponse(VolleyError error) {
+                            // error
+                            Log.d("Error.Response", error.toString());
+                        }
+                    }
+            ) {
+
+                /**
+                 * Passing auth request headers
+                 */
+                @Override
+                public Map<String, String> getHeaders() {
+                    HashMap<String, String> headers = new HashMap<String, String>();
+                    headers.put("Content-Type", "application/json");
+                    headers.put("Authorization", "Bearer " + accessToken);
+                    return headers;
+                }
+            };
+            queue.add(postRequest);
+        }
     }
 }

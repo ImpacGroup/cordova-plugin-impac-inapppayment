@@ -51,6 +51,15 @@ public class ImpacInAppPayment extends CordovaPlugin {
             case "canMakePayments":
                 callbackContext.success(1);
                 return true;
+            case "onUpdate":
+                // TODO: maybe we should implement this?
+                return true;
+            case "refreshStatus":
+                billingManager.refreshStatus();
+                return true;
+            case "setValidation":
+                billingManager.setValidation(args.getString(0), args.getString(1));
+                return true;
             default:
                 callbackContext.error("\"" + action + "\" is not a recognized action.");
                 break;
