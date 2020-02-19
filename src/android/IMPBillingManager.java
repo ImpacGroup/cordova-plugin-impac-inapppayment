@@ -6,11 +6,14 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
+import com.android.billingclient.api.AcknowledgePurchaseParams;
+import com.android.billingclient.api.AcknowledgePurchaseResponseListener;
 import com.android.billingclient.api.BillingClient;
 import com.android.billingclient.api.BillingClientStateListener;
 import com.android.billingclient.api.BillingFlowParams;
 import com.android.billingclient.api.BillingResult;
 import com.android.billingclient.api.Purchase;
+import com.android.billingclient.api.Purchase.PurchaseState;
 import com.android.billingclient.api.PurchasesUpdatedListener;
 import com.android.billingclient.api.SkuDetails;
 import com.android.billingclient.api.SkuDetailsParams;
@@ -21,7 +24,7 @@ import java.util.List;
 
 import static org.apache.cordova.Whitelist.TAG;
 
-public class IMPBillingManager implements PurchasesUpdatedListener {
+public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgePurchaseResponseListener {
 
     private BillingClient billingClient;
     private SkuDetailsParams.Builder skuParamsBuilder;
@@ -70,6 +73,20 @@ public class IMPBillingManager implements PurchasesUpdatedListener {
         Log.d(TAG, "handlePurchase: " + purchase.getPurchaseToken());
         Log.d(TAG, "handlePurchase: " + purchase.getSku());
         Log.d(TAG, "handlePurchase: " + purchase.getPackageName());
+
+        if (purchase.getPurchaseState() == PurchaseState.PURCHASED) {
+            // Grant entitlement to the user.
+            // TODO
+
+            // Acknowledge the purchase if it hasn't already been acknowledged.
+            if (!purchase.isAcknowledged()) {
+                AcknowledgePurchaseParams acknowledgePurchaseParams =
+                        AcknowledgePurchaseParams.newBuilder()
+                                .setPurchaseToken(purchase.getPurchaseToken())
+                                .build();
+                billingClient.acknowledgePurchase(acknowledgePurchaseParams, this);
+            }
+        }
     }
 
     void getProducts(final IMPBillingManagerProductListener listener) {
@@ -110,5 +127,10 @@ public class IMPBillingManager implements PurchasesUpdatedListener {
             }
         }
         return null;
+    }
+
+    @Override
+    public void onAcknowledgePurchaseResponse(BillingResult billingResult) {
+        Log.d(TAG, "onAcknowledgePurchaseResponse: " + billingResult.getResponseCode());
     }
 }
