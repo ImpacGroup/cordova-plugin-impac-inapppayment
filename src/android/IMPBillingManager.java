@@ -74,7 +74,7 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
         Log.d(TAG, "handlePurchase: " + purchase.getSku());
         Log.d(TAG, "handlePurchase: " + purchase.getPackageName());
 
-        Log.d(TAG, "handlePurchase: " + purchase.getPurchaseState() == PurchaseState.PURCHASED);
+        Log.d(TAG, "handlePurchase: " + (purchase.getPurchaseState() == PurchaseState.PURCHASED));
         if (purchase.getPurchaseState() == PurchaseState.PURCHASED) {
             // Grant entitlement to the user.
             // TODO
