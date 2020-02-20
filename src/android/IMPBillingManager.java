@@ -23,6 +23,7 @@ import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.RequestFuture;
 import com.android.volley.toolbox.Volley;
 
 import org.json.JSONObject;
@@ -31,6 +32,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static org.apache.cordova.Whitelist.TAG;
 
@@ -179,8 +181,10 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
             data.put("purchaseToken", purchase.getPurchaseToken());
             data.put("productId", purchase.getSku());
 
-            JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, this.url, new JSONObject(data),
-                    new Response.Listener<JSONObject>()
+            RequestFuture<JSONObject> future = RequestFuture.newFuture();
+
+            JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, this.url, new JSONObject(data), future, future
+                    /*new Response.Listener<JSONObject>()
                     {
                         @Override
                         public void onResponse(JSONObject response) {
@@ -195,7 +199,7 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
                             // error
                             Log.d("Error.Response", error.toString());
                         }
-                    }
+                    }*/
             ) {
 
                 /**
@@ -210,6 +214,14 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
                 }
             };
             queue.add(postRequest);
+
+            try {
+                JSONObject response = future.get(30, TimeUnit.SECONDS);
+                //return new VolleyResponse<>(true, response);
+            } catch (Exception e) {
+                Log.d(TAG, "ERROR on API call: ");
+                Log.d(TAG, e.getMessage());
+            }
         }
     }
 }
