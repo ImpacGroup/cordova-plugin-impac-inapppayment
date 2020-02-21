@@ -149,10 +149,25 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
         skuParamsBuilder.setSkusList(ids).setType(BillingClient.SkuType.SUBS);
     }
 
-    void buyProduct(String id, Activity activity) {
+    void buyProduct(String id, Activity activity, String oldSku) {
         SkuDetails skuDetail = getSkuDetailsBy(id);
+        SkuDetails oldSkuDetail = null;
+        if (oldSku != null) {
+            oldSkuDetail = getSkuDetailsBy(oldSku);
+        }
+
         if (skuDetail != null) {
-            BillingFlowParams flowParams = BillingFlowParams.newBuilder().setSkuDetails(skuDetail).build();
+            BillingFlowParams.Builder builder = BillingFlowParams.newBuilder();
+            builder.setSkuDetails(skuDetail);
+            if (oldSkuDetail != null) {
+                builder.setOldSku(oldSkuDetail.getSku()); // TODO: add purchase token as 2nd parameter
+                builder.setReplaceSkusProrationMode(BillingFlowParams.ProrationMode.IMMEDIATE_WITH_TIME_PRORATION);
+                Log.d(TAG, "buyProduct: crossgrade to " + oldSkuDetail.getSku());
+            } else {
+                Log.d(TAG, "buyProduct: no crossgrade");
+            }
+
+            BillingFlowParams flowParams = builder.build();
             billingClient.launchBillingFlow(activity, flowParams);
         }
     }

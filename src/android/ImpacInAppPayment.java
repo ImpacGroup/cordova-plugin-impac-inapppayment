@@ -46,7 +46,11 @@ public class ImpacInAppPayment extends CordovaPlugin {
                 }
                 return true;
             case "buyProduct":
-                billingManager.buyProduct(args.getString(0), cordova.getActivity());
+                String oldSku = null;
+                if (args.length() > 1) {
+                    oldSku = args.getString(1);
+                }
+                billingManager.buyProduct(args.getString(0), cordova.getActivity(), oldSku);
                 return true;
             case "canMakePayments":
                 callbackContext.success(1);
