@@ -162,7 +162,7 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
             if (oldSkuDetail != null) {
                 builder.setOldSku(oldSkuDetail.getSku()); // TODO: add purchase token as 2nd parameter
                 builder.setReplaceSkusProrationMode(BillingFlowParams.ProrationMode.IMMEDIATE_WITH_TIME_PRORATION);
-                Log.d(TAG, "buyProduct: crossgrade to " + oldSkuDetail.getSku());
+                Log.d(TAG, "buyProduct: crossgrade from " + oldSkuDetail.getSku());
             } else {
                 Log.d(TAG, "buyProduct: no crossgrade");
             }
