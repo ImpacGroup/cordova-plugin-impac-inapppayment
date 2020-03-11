@@ -93,9 +93,11 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
         Log.d(TAG, "IMPAC Loading purchases");
         Purchase.PurchasesResult purchasesResult = billingClient.queryPurchases(BillingClient.SkuType.SUBS);
         List<Purchase> purchases = purchasesResult.getPurchasesList();
-        for (Purchase purchase : purchases) {
-            Log.d(TAG, "purchases: " + purchase.getSku() + " " + purchase.getOrderId() + " " + purchase.getPurchaseToken());
-            sendPurchaseToAPI(purchase);
+        if (purchases != null) {
+            for (Purchase purchase : purchases) {
+                Log.d(TAG, "purchases: " + purchase.getSku() + " " + purchase.getOrderId() + " " + purchase.getPurchaseToken());
+                sendPurchaseToAPI(purchase);
+            }
         }
     }
 
