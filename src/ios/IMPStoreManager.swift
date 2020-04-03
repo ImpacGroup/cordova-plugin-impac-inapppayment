@@ -38,6 +38,7 @@ class IMPStoreManager: NSObject, SKPaymentTransactionObserver {
     private var currentConfig: IMPValidationConfig?
     
     private override init() { productIDs = [] }
+    private let openValidationKey = "IMPStoreManagerOpenValidation"
     
     public func set(productIDs: Set<ProductID>) {
       self.productIDs = productIDs
@@ -69,12 +70,13 @@ class IMPStoreManager: NSObject, SKPaymentTransactionObserver {
             switch transaction.transactionState {
             case .purchased:
                 if let receipt = loadReceipt(), let config = currentConfig, let product = getProductBy(id: transaction.payment.productIdentifier) {
-                    checkReceipt(receipt: receipt, for: product, config: config) { [weak self] (success) in
+                    checkReceipt(receipt: receipt, for: product, config: config) { [weak self] (success, isValid) in
                         guard let strongSelf = self else { return }
                         queue.finishTransaction(transaction)
-                        if success {
-                            strongSelf.endTransaction(success: success, product: product)
+                        if !success {
+                            strongSelf.storeOpenValidation()
                         }
+                        strongSelf.endTransaction(success: success, product: product)
                     }
                 }
             case .deferred:
@@ -116,15 +118,15 @@ class IMPStoreManager: NSObject, SKPaymentTransactionObserver {
         return nil
     }
     
-    private func checkReceipt(receipt: String, for product: SKProduct?, config: IMPValidationConfig, completion: @escaping (Bool) -> Void ) {
-        validationController.validateReceipt(receipt: receipt, validationInfo: config) { [weak self] (success, userViolation) in
+    private func checkReceipt(receipt: String, for product: SKProduct?, config: IMPValidationConfig, completion: @escaping (_ success: Bool, _ isValid: Bool) -> Void ) {
+        validationController.validateReceipt(receipt: receipt, validationInfo: config) { [weak self] (success, userViolation, isValid) in
             if userViolation {
                 guard let strongSelf = self else { return }
                 DispatchQueue.main.async {
                     strongSelf.delegate?.userViolation(receipt: receipt, product: product != nil ? IMPProduct.from(skProduct: product!) : nil)
                 }
             }
-            completion(success)
+            completion(success, isValid)
         }
     }
     
@@ -143,7 +145,34 @@ class IMPStoreManager: NSObject, SKPaymentTransactionObserver {
     }
     
     public func setValidationConfig(config: IMPValidationConfig) {
-        currentConfig = config
+        if currentConfig == nil {
+            currentConfig = config
+            performOpenValidation()
+        } else {
+            currentConfig = config
+        }
+    }
+    
+    /**
+     Store that the current receipt needs validation at next app resume.
+     */
+    private func storeOpenValidation() {
+        UserDefaults.standard.set(true, forKey: openValidationKey)
+    }
+    
+    private func performOpenValidation() {
+        if UserDefaults.standard.bool(forKey: openValidationKey) {
+            if let receipt = loadReceipt(), let config = currentConfig{
+                validationController.validateReceipt(receipt: receipt, validationInfo: config) { [weak self] (success, userViolation, isValid) in
+                    guard let strongSelf = self else { return }
+                    if (success) {
+                        UserDefaults.standard.set(false, forKey: strongSelf.openValidationKey)
+                    }
+                }
+            } else {
+                print("No receipt to validate")
+            }
+        }
     }
     
 }
@@ -171,9 +200,8 @@ extension IMPStoreManager: SKProductsRequestDelegate {
     }
     
     func requestDidFinish(_ request: SKRequest) {
-        print(request)
         if let _ = request as? SKReceiptRefreshRequest, let receipt = loadReceipt(), let config = currentConfig {
-            checkReceipt(receipt: receipt, for: nil, config: config) { [weak self] (success) in
+            checkReceipt(receipt: receipt, for: nil, config: config) { [weak self] (success, isValid) in
                 guard let strongSelf = self else { return }
                 DispatchQueue.main.async {
                     strongSelf.delegate?.refreshedReceipt(receipt: receipt)
