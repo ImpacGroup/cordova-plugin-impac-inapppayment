@@ -86,6 +86,12 @@ struct IMPUpdateMessage: Codable {
         IMPStoreManager.shared.delegate = self
         IMPStoreManager.shared.refreshStatus()
     }
+    
+    @objc(restorePurchases:) func restorePurchases(command: CDVInvokedUrlCommand) {
+        IMPStoreManager.shared.delegate = self
+        IMPStoreManager.shared.restorePurchase()
+        
+    }
 }
 
 extension ImpacInappPayment: IMPStoreManagerDelegate {

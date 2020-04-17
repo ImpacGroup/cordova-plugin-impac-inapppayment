@@ -94,14 +94,14 @@ class IMPStoreManager: NSObject, SKPaymentTransactionObserver {
     }
     
     public func restorePurchase() {
-        
+        SKPaymentQueue.default().restoreCompletedTransactions()
     }
     
     
     func paymentQueue(_ queue: SKPaymentQueue, updatedTransactions transactions: [SKPaymentTransaction]) {
         for transaction in transactions {
             switch transaction.transactionState {
-            case .purchased:
+            case .purchased, .restored:
                 if let receipt = loadReceipt(), let config = currentConfig, let product = getProductBy(id: transaction.payment.productIdentifier) {
                     checkReceipt(receipt: receipt, for: product, config: config) { [weak self] (success, isValid) in
                         guard let strongSelf = self else { return }
@@ -119,8 +119,6 @@ class IMPStoreManager: NSObject, SKPaymentTransactionObserver {
                         strongSelf.delegate?.didPauseTransaction(product: IMPProduct.from(skProduct: mProduct))
                     }
                 }
-            case .restored:
-                break
             case .failed:
                 if let mProduct = getProductBy(id: transaction.payment.productIdentifier) {
                     endTransaction(success: false, product: mProduct)
