@@ -45,16 +45,25 @@ class IMPStoreManager: NSObject, SKPaymentTransactionObserver {
       SKPaymentQueue.default().add(self)
     }
     
+    /**
+     Load all products
+     */
     public func loadProducts() {
         let productsRequest = SKProductsRequest(productIdentifiers: productIDs)
         productsRequest.delegate = self
         productsRequest.start()
     }
         
+    /**
+     Return if the current user can make a purchase
+     */
     public func canMakePayments() -> Bool {
         return SKPaymentQueue.canMakePayments()
     }
     
+    /**
+     Refresh Receipts
+     */
     public func refreshStatus() {
         if let _ = loadReceipt() {
             let refreshRequest = SKReceiptRefreshRequest()
@@ -64,6 +73,30 @@ class IMPStoreManager: NSObject, SKPaymentTransactionObserver {
             print("No receipt to refresh")
         }
     }
+    
+    /**
+     Buy a producta by id. Needs the validation configuration
+     */
+    public func buyProduct(productId: String, config: IMPValidationConfig) {
+        currentConfig = config
+        if let mProduct = getProductBy(id: productId) {
+            let payment = SKMutablePayment(product: mProduct)
+            SKPaymentQueue.default().add(payment)
+        }
+    }
+    
+    /**
+     Setup the configuration for the server communication to validate purchase
+     */
+    public func setValidationConfig(config: IMPValidationConfig) {
+        currentConfig = config
+        performOpenValidation()
+    }
+    
+    public func restorePurchase() {
+        
+    }
+    
     
     func paymentQueue(_ queue: SKPaymentQueue, updatedTransactions transactions: [SKPaymentTransaction]) {
         for transaction in transactions {
@@ -130,27 +163,10 @@ class IMPStoreManager: NSObject, SKPaymentTransactionObserver {
         }
     }
     
-    public func buyProduct(productId: String, config: IMPValidationConfig) {
-        currentConfig = config
-        if let mProduct = getProductBy(id: productId) {
-            let payment = SKMutablePayment(product: mProduct)
-            SKPaymentQueue.default().add(payment)
-        }
-    }
-    
     private func getProductBy(id: String) -> SKProduct? {
         return products.first(where: { (prod) -> Bool in
             return prod.productIdentifier == id
         })
-    }
-    
-    public func setValidationConfig(config: IMPValidationConfig) {
-        if currentConfig == nil {
-            currentConfig = config
-            performOpenValidation()
-        } else {
-            currentConfig = config
-        }
     }
     
     /**
