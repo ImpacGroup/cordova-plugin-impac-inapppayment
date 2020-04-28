@@ -23,8 +23,8 @@ ImpacInappPayment.prototype.buyProduct = function(productID, oldSku) {
     }
 }
 
-ImpacInappPayment.prototype.onUpdate = function(successCallback) {
-    cordova.exec(successCallback, null, 'ImpacInappPayment', 'onUpdate', []);
+ImpacInappPayment.prototype.onUpdate = function(successCallback, errorCallback) {
+    cordova.exec(successCallback, errorCallback, 'ImpacInappPayment', 'onUpdate', []);
 }
 
 ImpacInappPayment.prototype.restorePurchases = function() {

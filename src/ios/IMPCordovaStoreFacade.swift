@@ -11,6 +11,7 @@ import Foundation
 struct IMPUpdateMessage: Codable {
     let prodcut: IMPProduct?
     let status: String
+    let description: String?
 }
 
 @objc (ImpacInappPayment) class ImpacInappPayment: CDVPlugin {
@@ -53,7 +54,10 @@ struct IMPUpdateMessage: Codable {
             config = IMPValidationConfig(url: url, accessToken: accessToken)
             IMPStoreManager.shared.setValidationConfig(config: config!)
         } else {
-            print("ImpacInappPayment: Invalid arguments, missing accessToken and url")
+            let description = "Invalid arguments, missing accessToken and url"
+            let message = IMPUpdateMessage(prodcut: nil, status: "setValidation_error", description: description)
+            sendUpdateMessage(message: message, status: CDVCommandStatus_ERROR)
+            logError(message: description)
         }
     }
     
@@ -75,10 +79,16 @@ struct IMPUpdateMessage: Codable {
             if let mConfig = config {
                 IMPStoreManager.shared.buyProduct(productId: productId, config: mConfig)
             } else {
-                print("ImpacInappPayment: Missing validation configuration. Did you set validation configuration?")
+                let description = "Missing validation configuration. Did you set validation configuration?"
+                let message = IMPUpdateMessage(prodcut: IMPStoreManager.shared.getIMPProductBy(id: productId), status: "buyProduct_error", description: description)
+                sendUpdateMessage(message: message, status: CDVCommandStatus_ERROR)
+                logError(message: description)
             }
         } else {
-            print("ImpacInappPayment: Invalid arguments, missing product id")
+            let description = "Invalid arguments, missing product id"
+            let message = IMPUpdateMessage(prodcut: nil, status: "buyProduct_error", description: description)
+            sendUpdateMessage(message: message, status: CDVCommandStatus_ERROR)
+            logError(message: description)
         }
     }
     
@@ -90,41 +100,42 @@ struct IMPUpdateMessage: Codable {
     @objc(restorePurchases:) func restorePurchases(command: CDVInvokedUrlCommand) {
         IMPStoreManager.shared.delegate = self
         IMPStoreManager.shared.restorePurchase()
-        
     }
 }
 
 extension ImpacInappPayment: IMPStoreManagerDelegate {
     
     func refreshedReceipt(receipt: String) {
-        let message = IMPUpdateMessage(prodcut: nil, status: "refreshedReceipt")
-        sendUpdateMessage(message: message)
+        let message = IMPUpdateMessage(prodcut: nil, status: "refreshedReceipt", description: nil)
+        sendUpdateMessage(message: message, status: CDVCommandStatus_OK)
     }
     
     func userViolation(receipt: String, product: IMPProduct?) {
-        let message = IMPUpdateMessage(prodcut: product, status: "userViolation")
-        sendUpdateMessage(message: message)
+        let message = IMPUpdateMessage(prodcut: product, status: "userViolation", description: nil)
+        sendUpdateMessage(message: message, status: CDVCommandStatus_OK)
     }
     
-    private func sendUpdateMessage(message: IMPUpdateMessage) {
-        do {
-            let jsonData = try JSONEncoder().encode(message)
-            let result = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: String(data: jsonData, encoding: .utf8))
-            result?.keepCallback = true
-            self.commandDelegate.send(result, callbackId: onUpdateCallbackId)
-        } catch  {
-            print(error)
+    private func sendUpdateMessage(message: IMPUpdateMessage, status: CDVCommandStatus) {
+        if let callbackId = onUpdateCallbackId {
+            do {
+                let jsonData = try JSONEncoder().encode(message)
+                let result = CDVPluginResult(status: status, messageAs: String(data: jsonData, encoding: .utf8))
+                result?.keepCallback = true
+                self.commandDelegate.send(result, callbackId: callbackId)
+            } catch  {
+                print(error)
+            }
         }
     }
     
     func finishedPurchasingProcess(success: Bool, product: IMPProduct) {
-        let message = IMPUpdateMessage(prodcut: product, status: "finished")
-        sendUpdateMessage(message: message)
+        let message = IMPUpdateMessage(prodcut: product, status: "finished", description: nil)
+        sendUpdateMessage(message: message, status: success ? CDVCommandStatus_OK : CDVCommandStatus_ERROR)
     }
     
     func didPauseTransaction(product: IMPProduct) {
-        let message = IMPUpdateMessage(prodcut: product, status: "didPause")
-        sendUpdateMessage(message: message)
+        let message = IMPUpdateMessage(prodcut: product, status: "didPause", description: nil)
+        sendUpdateMessage(message: message, status: CDVCommandStatus_OK)
     }
     
     func productsLoaded(products: [IMPProduct]) {
@@ -138,4 +149,7 @@ extension ImpacInappPayment: IMPStoreManagerDelegate {
         }
     }
     
+    private func logError(message: String) {
+        print("ImpacInappPayment: \(message)")
+    }
 }

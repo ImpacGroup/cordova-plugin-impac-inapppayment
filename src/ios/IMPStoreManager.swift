@@ -168,6 +168,14 @@ class IMPStoreManager: NSObject, SKPaymentTransactionObserver {
     }
     
     /**
+     Returns the product to a given product id. Returns nil if no product found for id.
+     */
+    public func getIMPProductBy(id: String) -> IMPProduct? {
+        guard let skprod = getProductBy(id: id) else { return nil }
+        return IMPProduct.from(skProduct: skprod)
+    }
+    
+    /**
      Store that the current receipt needs validation at next app resume.
      */
     private func storeOpenValidation() {
