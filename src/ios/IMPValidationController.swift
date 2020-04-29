@@ -18,7 +18,7 @@ enum HTTPMethod : String
 class IMPValidationController: NSObject {
     
     public func validateReceipt(receipt: String, validationInfo: IMPValidationConfig, completion: @escaping (_ success: Bool, _ userViolation: Bool, _ isValid: Bool) -> Void) {
-        let headers = ["Authorization": "Bearer \(validationInfo.accessToken)", "Content-Type": "application/json"]
+        let headers = ["Authorization": "\(validationInfo.authorizationType) \(validationInfo.accessString)", "Content-Type": "application/json"]
         if let json = getJSONObject(data: ["receipt" : receipt]) {
             performRequestWith(url: validationInfo.url, method: .post, parameters: json, headers: headers) { (result) in
                 if let success = result["success"] as? Bool, let userViolation = result["userViolation"] as? Bool {

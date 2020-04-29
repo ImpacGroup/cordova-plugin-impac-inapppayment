@@ -62,7 +62,7 @@ public class ImpacInAppPayment extends CordovaPlugin {
                 billingManager.refreshStatus();
                 return true;
             case "setValidation":
-                billingManager.setValidation(args.getString(0), args.getString(1));
+                billingManager.setValidation(args.getString(0), args.getString(1), args.getString(2));
                 return true;
             default:
                 callbackContext.error("\"" + action + "\" is not a recognized action.");

@@ -7,8 +7,8 @@ ImpacInappPayment.prototype.setIds = function(ids) {
     cordova.exec(null, null, 'ImpacInappPayment', 'setIds', [ids]);
 }
 
-ImpacInappPayment.prototype.setValidation = function(accessToken, url) {
-    cordova.exec(null, null, 'ImpacInappPayment', 'setValidation', [accessToken, url]);
+ImpacInappPayment.prototype.setValidation = function(accessString, url, authorizationType) {
+    cordova.exec(null, null, 'ImpacInappPayment', 'setValidation', [accessString, url, authorizationType]);
 }
 
 ImpacInappPayment.prototype.getProducts = function(successCallback) {

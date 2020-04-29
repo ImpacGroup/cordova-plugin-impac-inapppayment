@@ -34,6 +34,18 @@ import java.util.Map;
 
 import static org.apache.cordova.Whitelist.TAG;
 
+class IMPValidationConfig {
+    public String url;
+    public String accessString;
+    public String authorizationType;
+
+    IMPValidationConfig(String url, String accessString, String authorizationType) {
+        this.url = url;
+        this.accessString = accessString;
+        this.authorizationType = authorizationType;
+    }
+}
+
 public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgePurchaseResponseListener {
 
     private BillingClient billingClient;
@@ -43,8 +55,7 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
     private Purchase purchaseForAcknowlegde;
 
     // http config stuff
-    private String accessToken;
-    private String url;
+    private IMPValidationConfig config;
     private RequestQueue queue;
 
     IMPBillingManager(Context context) {
@@ -101,9 +112,8 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
         }
     }
 
-    public void setValidation(String accessToken, String url) {
-        this.accessToken = accessToken;
-        this.url = url;
+    public void setValidation(String accessToken, String url, String type) {
+        this.config = new IMPValidationConfig(url, accessToken, type);
     }
 
     private void handlePurchase(Purchase purchase) {
@@ -191,12 +201,12 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
 
     private void sendPurchaseToAPI(Purchase purchase) {
 
-        if (purchase != null && this.accessToken != null && this.url != null) {
-            Map<String, String> data = new HashMap<String, String>();
+        if (purchase != null && this.config != null) {
+            Map<String, String> data = new HashMap<>();
             data.put("purchaseToken", purchase.getPurchaseToken());
             data.put("productId", purchase.getSku());
 
-            JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, this.url, new JSONObject(data),
+            JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, this.config.url, new JSONObject(data),
                     new Response.Listener<JSONObject>()
                     {
                         @Override
@@ -220,9 +230,9 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
                  */
                 @Override
                 public Map<String, String> getHeaders() {
-                    HashMap<String, String> headers = new HashMap<String, String>();
+                    HashMap<String, String> headers = new HashMap<>();
                     headers.put("Content-Type", "application/json");
-                    headers.put("Authorization", "Bearer " + accessToken);
+                    headers.put("Authorization", config.authorizationType + " " + config.accessString);
                     return headers;
                 }
             };

@@ -50,8 +50,8 @@ struct IMPUpdateMessage: Codable {
      */
     @objc(setValidation:) func setValidation(command: CDVInvokedUrlCommand) {
         IMPStoreManager.shared.delegate = self
-        if command.arguments.count == 2, let accessToken = command.arguments[0] as? String, let url = command.arguments[1] as? String {
-            config = IMPValidationConfig(url: url, accessToken: accessToken)
+        if command.arguments.count == 3, let accessToken = command.arguments[0] as? String, let url = command.arguments[1] as? String, let type = command.arguments[2] as? String {
+            config = IMPValidationConfig(url: url, authorizationType: type, accessString: accessToken)
             IMPStoreManager.shared.setValidationConfig(config: config!)
         } else {
             let description = "Invalid arguments, missing accessToken and url"

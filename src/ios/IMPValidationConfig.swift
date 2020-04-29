@@ -10,5 +10,6 @@ import Foundation
 
 struct IMPValidationConfig {
     let url: String
-    let accessToken: String
+    let authorizationType: String
+    let accessString: String
 }
