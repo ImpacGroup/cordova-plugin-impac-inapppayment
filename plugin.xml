@@ -30,6 +30,7 @@
         <source-file src="src/ios/IMPCordovaStoreFacade.swift"/>
         <source-file src="src/ios/IMPValidationConfig.swift"/>
         <source-file src="src/ios/IMPValidationController.swift"/>
+        <source-file src="src/ios/IMPSKErrorHelper.swift"/>        
     </platform>
 
     <platform name="android">

@@ -15,7 +15,7 @@ protocol IMPStoreManagerDelegate: class {
     func productsLoaded(products: [IMPProduct])
     
     // Get called if a transaction process finished.
-    func finishedPurchasingProcess(success: Bool, product: IMPProduct)
+    func finishedPurchasingProcess(success: Bool, product: IMPProduct, error: String?)
     
     // Get called if a transaction end for the moment. As Example waiting for approvel for transaction.
     func didPauseTransaction(product: IMPProduct)
@@ -109,7 +109,7 @@ class IMPStoreManager: NSObject, SKPaymentTransactionObserver {
                         if !success {
                             strongSelf.storeOpenValidation()
                         }
-                        strongSelf.endTransaction(success: success, product: product)
+                        strongSelf.endTransaction(success: success, product: product, error: nil)
                     }
                 }
             case .deferred:
@@ -121,7 +121,13 @@ class IMPStoreManager: NSObject, SKPaymentTransactionObserver {
                 }
             case .failed:
                 if let mProduct = getProductBy(id: transaction.payment.productIdentifier) {
-                    endTransaction(success: false, product: mProduct)
+                    var errorString: String? = nil
+                    if let error = transaction.error as? SKError {
+                        if error.code != SKError.paymentCancelled {
+                            errorString = IMPSKErrorHelper.getDescriptionFor(code: error.code)
+                        }
+                    }
+                    endTransaction(success: false, product: mProduct, error: errorString)
                 }
             default:
                 break
@@ -129,10 +135,10 @@ class IMPStoreManager: NSObject, SKPaymentTransactionObserver {
         }
     }
     
-    private func endTransaction(success: Bool, product: SKProduct) {
+    private func endTransaction(success: Bool, product: SKProduct, error: String?) {
         DispatchQueue.main.async { [weak self] in
             guard let strongSelf = self else { return }
-            strongSelf.delegate?.finishedPurchasingProcess(success: success, product: IMPProduct.from(skProduct: product))
+            strongSelf.delegate?.finishedPurchasingProcess(success: success, product: IMPProduct.from(skProduct: product), error: error)
         }
     }
     

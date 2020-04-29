@@ -128,9 +128,9 @@ extension ImpacInappPayment: IMPStoreManagerDelegate {
         }
     }
     
-    func finishedPurchasingProcess(success: Bool, product: IMPProduct) {
-        let message = IMPUpdateMessage(prodcut: product, status: "finished", description: nil)
-        sendUpdateMessage(message: message, status: success ? CDVCommandStatus_OK : CDVCommandStatus_ERROR)
+    func finishedPurchasingProcess(success: Bool, product: IMPProduct, error: String?) {
+        let message = IMPUpdateMessage(prodcut: product, status: "finished", description: error)
+        sendUpdateMessage(message: message, status: error == nil ? CDVCommandStatus_OK : CDVCommandStatus_ERROR)
     }
     
     func didPauseTransaction(product: IMPProduct) {
