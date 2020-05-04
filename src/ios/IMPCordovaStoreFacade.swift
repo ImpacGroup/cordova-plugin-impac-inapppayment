@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import Cordova
 
 struct IMPUpdateMessage: Codable {
     let prodcut: IMPProduct?
