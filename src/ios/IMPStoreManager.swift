@@ -21,7 +21,7 @@ protocol IMPStoreManagerDelegate: class {
     func didPauseTransaction(product: IMPProduct)
     
     // Get called if a user violation accured for a receipt.
-    func userViolation(receipt: String, product: IMPProduct?)
+    func userViolation(receipt: String, transactions: [String]?)
     
     // Get called if a user violation accured for a receipt.
     func refreshedReceipt(receipt: String)
@@ -160,15 +160,15 @@ class IMPStoreManager: NSObject, SKPaymentTransactionObserver {
         return nil
     }
     
-    private func checkReceipt(receipt: String, for product: SKProduct?, config: IMPValidationConfig, completion: @escaping (_ success: Bool, _ isValid: Bool) -> Void ) {
-        validationController.validateReceipt(receipt: receipt, validationInfo: config) { [weak self] (success, userViolation, isValid) in
-            if userViolation {
+    private func checkReceipt(receipt: String, for product: SKProduct?, config: IMPValidationConfig, completion: @escaping (_ success: Bool, _ result: IMPValidationResult?) -> Void ) {
+        validationController.validateReceipt(receipt: receipt, validationInfo: config) { [weak self] (success, validationResult) in
+            if let mValidationResult = validationResult, mValidationResult.userViolation {
                 guard let strongSelf = self else { return }
                 DispatchQueue.main.async {
-                    strongSelf.delegate?.userViolation(receipt: receipt, product: product != nil ? IMPProduct.from(skProduct: product!) : nil)
+                    strongSelf.delegate?.userViolation(receipt: receipt, transactions: mValidationResult.originalTransactionIds)
                 }
             }
-            completion(success, isValid)
+            completion(success, validationResult)
         }
     }
     
@@ -196,7 +196,7 @@ class IMPStoreManager: NSObject, SKPaymentTransactionObserver {
     private func performOpenValidation() {
         if UserDefaults.standard.bool(forKey: openValidationKey) {
             if let receipt = loadReceipt(), let config = currentConfig{
-                validationController.validateReceipt(receipt: receipt, validationInfo: config) { [weak self] (success, userViolation, isValid) in
+                validationController.validateReceipt(receipt: receipt, validationInfo: config) { [weak self] (_ success, _ validationResult) in
                     guard let strongSelf = self else { return }
                     if (success) {
                         UserDefaults.standard.set(false, forKey: strongSelf.openValidationKey)

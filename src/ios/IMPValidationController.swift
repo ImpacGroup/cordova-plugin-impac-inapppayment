@@ -17,24 +17,24 @@ enum HTTPMethod : String
 
 class IMPValidationController: NSObject {
     
-    public func validateReceipt(receipt: String, validationInfo: IMPValidationConfig, completion: @escaping (_ success: Bool, _ userViolation: Bool, _ isValid: Bool) -> Void) {
+    public func validateReceipt(receipt: String, validationInfo: IMPValidationConfig, completion: @escaping (_ success: Bool, _ result: IMPValidationResult?) -> Void) {
         let headers = ["Authorization": "\(validationInfo.authorizationType) \(validationInfo.accessString)", "Content-Type": "application/json"]
         if let json = getJSONObject(data: ["receipt" : receipt]) {
-            performRequestWith(url: validationInfo.url, method: .post, parameters: json, headers: headers) { (result) in
-                if let success = result["success"] as? Bool, let userViolation = result["userViolation"] as? Bool {
-                    completion(true, userViolation, success)
+            performRequestWith(url: validationInfo.url, method: .post, parameters: json, headers: headers) { (_ result, _ error) in
+                if let mResult = result, let validationResult = IMPValidationController.getObject(data: mResult, retClass: IMPValidationResult.self) as? IMPValidationResult {
+                    completion(true, validationResult)
                 } else {
-                    completion(false, false, false)
+                    completion(false, nil)
                 }
             }
         } else {
-            completion(false, false, false)
+            completion(false, nil)
         }
     }        
 
     // MARK - Hanlde api call native without external framework.
     
-    private func performRequestWith(url: String, method: HTTPMethod, parameters: Any?, headers: [String: String], completion: @escaping (_ response: [String: Any])-> Void) {
+    private func performRequestWith(url: String, method: HTTPMethod, parameters: Any?, headers: [String: String], completion: @escaping (_ response: Data?, _ error: [String: Any]?)-> Void) {
         if let myUrl = URL(string: url)
         {
             let request = NSMutableURLRequest(url: myUrl, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 60.0)
@@ -52,34 +52,27 @@ class IMPValidationController: NSObject {
                                               
                        if let codeError = error
                        {
-                           completion(codeError)
+                           completion(nil, codeError)
                        }
                        else if success
                        {
                            if let responseData = data
                            {
-                               if let responeDict = strongSelf.getAnyForJSONObject(data: responseData) as? [String: Any]
-                               {
-                                   completion(responeDict)
-                               }
-                               else
-                               {
-                                   completion(["data":responseData])
-                               }
+                                completion(responseData, nil)
                            }
                        }
                        else
                        {
-                           completion(["error": "Not authorized"])
+                           completion(nil, ["error": "Not authorized"])
                        }
                    })
                }
                else
                {
                    if let errorDescription = error?.localizedDescription{
-                       completion(["error": errorDescription])
+                       completion(nil, ["error": errorDescription])
                    }else{
-                       completion(["error": "Not authorized"])
+                    completion(nil, ["error": "Not authorized"])
                    }
                    
                }
@@ -89,7 +82,7 @@ class IMPValidationController: NSObject {
        }
        else
        {
-           completion(["error": "Not authorized"])
+           completion(nil, ["error": "Not authorized"])
        }
        
    }
@@ -113,14 +106,13 @@ class IMPValidationController: NSObject {
     }
 
     // Json object to any
-    private func getAnyForJSONObject(data: Data) -> Any?
+    private static func getObject<T: Codable>(data: Data, retClass: T.Type) -> Any?
     {
         do
         {
-            return try JSONSerialization.jsonObject(with: data, options: JSONSerialization.ReadingOptions())
-        }
-        catch
-        {
+            let decoder = JSONDecoder()
+            return try decoder.decode(retClass, from: data)
+        } catch {
             return nil
         }
     }
