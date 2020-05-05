@@ -11,8 +11,8 @@ ImpacInappPayment.prototype.setValidation = function(accessString, url, authoriz
     cordova.exec(null, null, 'ImpacInappPayment', 'setValidation', [accessString, url, authorizationType]);
 }
 
-ImpacInappPayment.prototype.getProducts = function(successCallback) {
-    cordova.exec(successCallback, null, 'ImpacInappPayment', 'getProducts', []);
+ImpacInappPayment.prototype.getProducts = function(successCallback, errorCallback) {
+    cordova.exec(successCallback, errorCallback, 'ImpacInappPayment', 'getProducts', []);
 }
 
 ImpacInappPayment.prototype.buyProduct = function(productID, oldSku) {

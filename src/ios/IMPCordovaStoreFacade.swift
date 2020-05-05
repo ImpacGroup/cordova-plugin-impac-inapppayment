@@ -150,6 +150,17 @@ extension ImpacInappPayment: IMPStoreManagerDelegate {
         }
     }
     
+    func didFailLoadingProducts(err: String) {
+        do {
+            let jsonData = try JSONEncoder().encode(err)
+            let result = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: String(data: jsonData, encoding: .utf8))
+            self.commandDelegate.send(result, callbackId: loadProductsCallbackId)
+            loadProductsCallbackId = nil
+        } catch  {
+            print(error)
+        }
+    }
+    
     private func logError(message: String) {
         print("ImpacInappPayment: \(message)")
     }

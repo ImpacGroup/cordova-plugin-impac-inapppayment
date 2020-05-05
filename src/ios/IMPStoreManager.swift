@@ -12,6 +12,11 @@ import StoreKit
 public typealias ProductID = String
     
 protocol IMPStoreManagerDelegate: class {
+    
+    // Gets called if failed, loading products
+    func didFailLoadingProducts(err: String)
+    
+    // Gets called if products loaded
     func productsLoaded(products: [IMPProduct])
     
     // Get called if a transaction process finished.
@@ -244,6 +249,9 @@ extension IMPStoreManager: SKProductsRequestDelegate {
     }
     
     func request(_ request: SKRequest, didFailWithError error: Error) {
-        print(error)
+        DispatchQueue.main.async { [weak self] in
+            guard let strongSelf = self else { return }
+            strongSelf.delegate?.didFailLoadingProducts(err: error.localizedDescription)
+        }
     }
 }
