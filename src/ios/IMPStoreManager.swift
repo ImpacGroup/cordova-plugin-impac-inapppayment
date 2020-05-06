@@ -108,14 +108,17 @@ class IMPStoreManager: NSObject, SKPaymentTransactionObserver {
             switch transaction.transactionState {
             case .purchased, .restored:
                 if let receipt = loadReceipt(), let config = currentConfig, let product = getProductBy(id: transaction.payment.productIdentifier) {
+                    queue.finishTransaction(transaction)
                     checkReceipt(receipt: receipt, for: product, config: config) { [weak self] (success, isValid) in
                         guard let strongSelf = self else { return }
-                        queue.finishTransaction(transaction)
+                        
                         if !success {
                             strongSelf.storeOpenValidation()
                         }
                         strongSelf.endTransaction(success: success, product: product, error: nil)
                     }
+                } else {
+                    queue.finishTransaction(transaction)
                 }
             case .deferred:
                 DispatchQueue.main.async { [weak self] in
@@ -138,6 +141,8 @@ class IMPStoreManager: NSObject, SKPaymentTransactionObserver {
                     }
                     queue.finishTransaction(transaction)
                     endTransaction(success: false, product: mProduct, error: errorString)
+                } else {
+                    queue.finishTransaction(transaction)
                 }
             default:
                 break
