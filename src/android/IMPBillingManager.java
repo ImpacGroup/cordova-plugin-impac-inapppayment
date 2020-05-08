@@ -34,23 +34,14 @@ import java.util.Map;
 
 import static org.apache.cordova.Whitelist.TAG;
 
-class IMPValidationConfig {
-    public String url;
-    public String accessString;
-    public String authorizationType;
-
-    IMPValidationConfig(String url, String accessString, String authorizationType) {
-        this.url = url;
-        this.accessString = accessString;
-        this.authorizationType = authorizationType;
-    }
-}
-
 public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgePurchaseResponseListener {
 
     private BillingClient billingClient;
+    private IMPBillingClientState state;
     private SkuDetailsParams.Builder skuParamsBuilder;
+    private IMPBillingManagerListener listener;
     private List<SkuDetails> skuDetails;
+    private List<Purchase> mPurchases;
 
     private Purchase purchaseForAcknowlegde;
 
@@ -61,26 +52,57 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
     IMPBillingManager(Context context) {
         billingClient = BillingClient.newBuilder(context).setListener(this).enablePendingPurchases().build();
         queue = Volley.newRequestQueue(context);
+        createConnection();
+    }
 
+    private void createConnection() {
+        state = IMPBillingClientState.connecting;
         billingClient.startConnection(new BillingClientStateListener() {
             @Override
             public void onBillingSetupFinished(BillingResult billingResult) {
+                state = IMPBillingClientState.connected;
                 if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
-                    Log.d(TAG, "onBillingSetupFinished:  OK");
+                    loadPurchases();
                     // The BillingClient is ready. You can query purchases here.
+                    refreshStatus();
                 } else {
-                    Log.d(TAG, "onBillingSetupFinished: " + billingResult.getResponseCode());
+                    recreateConnection();
                 }
-
-                refreshStatus();
             }
             @Override
             public void onBillingServiceDisconnected() {
-                Log.d(TAG, "onBillingServiceDisconnected: ");
-                // Try to restart the connection on the next request to
-                // Google Play by calling the startConnection() method.
+                recreateConnection();
             }
         });
+    }
+
+    private void recreateConnection() {
+        if (state != IMPBillingClientState.closed) {
+            state = IMPBillingClientState.disconnected;
+            createConnection();
+        }
+    }
+
+    private void loadPurchases() {
+        Purchase.PurchasesResult result = billingClient.queryPurchases(BillingClient.SkuType.INAPP);
+        mPurchases = result.getPurchasesList();
+    }
+
+    private @Nullable String getTokenFor(String sku) {
+        if (mPurchases != null) {
+            for (Purchase purchase : mPurchases) {
+                if (purchase.isAcknowledged()) {
+                    if (purchase.getSku().equals(sku)) {
+                        return purchase.getPurchaseToken();
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    public void setListener(IMPBillingManagerListener listener) {
+        this.listener = listener;
     }
 
     @Override
@@ -92,11 +114,11 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
                 handlePurchase(purchase);
             }
         } else if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.USER_CANCELED) {
-            // Handle an error caused by a user cancelling the purchase flow.
-            Log.d(TAG, "onPurchasesUpdated: " + "User Canceled");
+            for (Purchase purchase : list) {
+                listener.finishedPurchase(purchase.getSku());
+            }
         } else {
-            Log.d(TAG, "onPurchasesUpdated: " + billingResult.getResponseCode());
-            // Handle any other error codes.
+            listener.failedPurchase(IMPBillingResultHelper.getDescriptionFor(billingResult.getResponseCode()));
         }
     }
 
@@ -117,13 +139,7 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
     }
 
     private void handlePurchase(Purchase purchase) {
-        Log.d(TAG, "handlePurchase: " + purchase.getPurchaseToken());
-        Log.d(TAG, "handlePurchase: " + purchase.getSku());
-        Log.d(TAG, "handlePurchase: " + purchase.getPackageName());
-
-        Log.d(TAG, "handlePurchase: " + (purchase.getPurchaseState() == PurchaseState.PURCHASED));
         if (purchase.getPurchaseState() == PurchaseState.PURCHASED) {
-            Log.d(TAG, "handlePurchase: " + purchase.isAcknowledged());
             // Acknowledge the purchase if it hasn't already been acknowledged.
             if (!purchase.isAcknowledged()) {
                 AcknowledgePurchaseParams acknowledgePurchaseParams =
@@ -135,28 +151,36 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
             } else {
                 sendPurchaseToAPI(purchase);
             }
+        } else if (purchase.getPurchaseState() == PurchaseState.PENDING) {
+            listener.pendingPurchase(purchase.getSku());
         }
     }
 
-    void getProducts(final IMPBillingManagerProductListener listener) {
-        Log.d(TAG, "getProducts: ");
+    /**
+     * Loads sku details
+     */
+    void getProducts() {
         billingClient.querySkuDetailsAsync(skuParamsBuilder.build(), new SkuDetailsResponseListener() {
             @Override
             public void onSkuDetailsResponse(BillingResult billingResult, List<SkuDetails> list) {
-                Log.d(TAG, "onSkuDetailsResponse: " + list);
-                skuDetails = list;
-                List<IMPProduct> products = new ArrayList<>();
-                for (SkuDetails skuDetail: list) {
-                    products.add(new IMPProduct(skuDetail));
+                if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+                    Log.d(TAG, "onSkuDetailsResponse: " + list);
+                    skuDetails = list;
+                    List<IMPProduct> products = new ArrayList<>();
+                    for (SkuDetails skuDetail: list) {
+                        products.add(new IMPProduct(skuDetail));
+                    }
+                    listener.productsLoaded(products);
+                } else {
+                    String statusString = IMPBillingResultHelper.getDescriptionFor(billingResult.getResponseCode());
+                    listener.failedLoadingProducts(statusString);
                 }
-                listener.productsLoaded(products);
             }
         });
 
     }
 
     void setIDs(List<String> ids) {
-        Log.d(TAG, "setIDs: " + ids);
         skuParamsBuilder = SkuDetailsParams.newBuilder();
         skuParamsBuilder.setSkusList(ids).setType(BillingClient.SkuType.SUBS);
     }
@@ -172,7 +196,7 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
             BillingFlowParams.Builder builder = BillingFlowParams.newBuilder();
             builder.setSkuDetails(skuDetail);
             if (oldSkuDetail != null) {
-                builder.setOldSku(oldSkuDetail.getSku()); // TODO: add purchase token as 2nd parameter
+                builder.setOldSku(oldSkuDetail.getSku(), getTokenFor(oldSkuDetail.getSku()));
                 builder.setReplaceSkusProrationMode(BillingFlowParams.ProrationMode.IMMEDIATE_WITH_TIME_PRORATION);
                 Log.d(TAG, "buyProduct: crossgrade from " + oldSkuDetail.getSku());
             } else {
@@ -182,6 +206,7 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
             BillingFlowParams flowParams = builder.build();
             billingClient.launchBillingFlow(activity, flowParams);
         }
+
     }
 
     private @Nullable SkuDetails getSkuDetailsBy(String id) {
@@ -195,11 +220,11 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
 
     @Override
     public void onAcknowledgePurchaseResponse(BillingResult billingResult) {
-        Log.d(TAG, "onAcknowledgePurchaseResponse: " + billingResult.getResponseCode());
+
         this.sendPurchaseToAPI(this.purchaseForAcknowlegde);
     }
 
-    private void sendPurchaseToAPI(Purchase purchase) {
+    private void sendPurchaseToAPI(final Purchase purchase) {
 
         if (purchase != null && this.config != null) {
             Map<String, String> data = new HashMap<>();
@@ -212,7 +237,9 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
                         @Override
                         public void onResponse(JSONObject response) {
                             // response
-                            Log.d("Response", response.toString());
+                            if (listener != null) {
+                                listener.finishedPurchase(purchase.getSku());
+                            }
                         }
                     },
                     new Response.ErrorListener()
@@ -220,7 +247,9 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
                         @Override
                         public void onErrorResponse(VolleyError error) {
                             // error
-                            Log.d("Error.Response", error.toString());
+                            if (listener != null) {
+                                listener.failedPurchase(error.toString());
+                            }
                         }
                     }
             ) {
@@ -237,6 +266,16 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
                 }
             };
             queue.add(postRequest);
+        } else if (listener != null) {
+            listener.failedPurchase("Unknown error");
         }
+    }
+
+    /**
+     * Closes the connection to billing client.
+     */
+    public void endBilling() {
+        state = IMPBillingClientState.closed;
+        billingClient.endConnection();
     }
 }

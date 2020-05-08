@@ -3,6 +3,7 @@ package de.impacgroup.inapppayment;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
 
@@ -10,6 +11,7 @@ import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CordovaWebView;
+import org.apache.cordova.PluginResult;
 import org.json.JSONArray;
 import org.json.JSONException;
 
@@ -19,25 +21,49 @@ import java.util.List;
 public class ImpacInAppPayment extends CordovaPlugin {
 
     private IMPBillingManager billingManager;
+    private CallbackContext updateCallbackContext;
+    private CallbackContext productCallbackContext;
 
     @Override
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         super.initialize(cordova, webView);
-        Context context = this.cordova.getActivity().getApplicationContext();
+        final Context context = this.cordova.getActivity().getApplicationContext();
         billingManager = new IMPBillingManager(context);
+        billingManager.setListener(new IMPBillingManagerListener() {
+            @Override
+            public void finishedPurchase(String sku) {
+                sendUpdateMessage(new IMPUpdateMessage("finished", null), PluginResult.Status.OK);
+            }
+
+            @Override
+            public void pendingPurchase(String sku) {
+                sendUpdateMessage(new IMPUpdateMessage("didPause", null), PluginResult.Status.OK);
+            }
+
+            @Override
+            public void failedPurchase(String error) {
+                sendUpdateMessage(new IMPUpdateMessage("finished", error), PluginResult.Status.ERROR);
+            }
+
+            @Override
+            public void productsLoaded(List<IMPProduct> list) {
+                String json = new Gson().toJson(list);
+                productCallbackContext.success(json);
+            }
+
+            @Override
+            public void failedLoadingProducts(String error) {
+                productCallbackContext.error(error);
+            }
+        });
     }
 
     @Override
     public boolean execute(String action, JSONArray args, final CallbackContext callbackContext) throws JSONException {
         switch (action) {
             case "getProducts":
-                billingManager.getProducts(new IMPBillingManagerProductListener() {
-                    @Override
-                    public void productsLoaded(List<IMPProduct> list) {
-                        String json = new Gson().toJson(list);
-                        callbackContext.success(json);
-                    }
-                });
+                billingManager.getProducts();
+                productCallbackContext = callbackContext;
                 return true;
             case "setIds":
                 JSONArray jsonIds = args.getJSONArray(0);
@@ -56,7 +82,7 @@ public class ImpacInAppPayment extends CordovaPlugin {
                 callbackContext.success(1);
                 return true;
             case "onUpdate":
-                // TODO: maybe we should implement this?
+                updateCallbackContext = callbackContext;
                 return true;
             case "refreshStatus":
                 billingManager.refreshStatus();
@@ -83,5 +109,28 @@ public class ImpacInAppPayment extends CordovaPlugin {
             }
         }
         billingManager.setIDs(listIds);
+    }
+
+    private void finishProcess(@Nullable String error) {
+        if (updateCallbackContext != null) {
+            PluginResult result = new PluginResult( error == null ? PluginResult.Status.OK : PluginResult.Status.ERROR);
+            result.setKeepCallback(true);
+            updateCallbackContext.sendPluginResult(result);
+        }
+    }
+
+    private void sendUpdateMessage(IMPUpdateMessage message, PluginResult.Status status) {
+        if (updateCallbackContext != null) {
+            Gson gson = new Gson();
+            PluginResult result = new PluginResult( status, gson.toJson(message));
+            result.setKeepCallback(true);
+            updateCallbackContext.sendPluginResult(result);
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        billingManager.endBilling();
     }
 }

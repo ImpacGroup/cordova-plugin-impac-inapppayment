@@ -44,8 +44,12 @@
 
         <source-file src="src/android/ImpacInAppPayment.java" target-dir="src/de/impacgroup/inapppayment"/>
         <source-file src="src/android/IMPBillingManager.java" target-dir="src/de/impacgroup/inapppayment"/>
-        <source-file src="src/android/IMPBillingManagerProductListener.java" target-dir="src/de/impacgroup/inapppayment"/>
+        <source-file src="src/android/IMPBillingManagerListener.java" target-dir="src/de/impacgroup/inapppayment"/>
         <source-file src="src/android/IMPProduct.java" target-dir="src/de/impacgroup/inapppayment"/>
+        <source-file src="src/android/IMPBillingResultHelper.java" target-dir="src/de/impacgroup/inapppayment"/>
+        <source-file src="src/android/IMPUpdateMessage.java" target-dir="src/de/impacgroup/inapppayment"/>
+        <source-file src="src/android/IMPBillingClientState.java" target-dir="src/de/impacgroup/inapppayment"/>
+        <source-file src="src/android/IMPValidationConfig.java" target-dir="src/de/impacgroup/inapppayment"/>        
         <framework src="com.android.billingclient:billing:2.1.0"/>
         <framework src="com.google.code.gson:gson:2.8.6"/>
         <framework src="com.android.volley:volley:1.1.1"/>
