@@ -111,8 +111,12 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
                 handlePurchase(purchase);
             }
         } else if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.USER_CANCELED) {
-            for (Purchase purchase : list) {
-                listener.finishedPurchase(purchase.getSku());
+            if (list != null) {
+                for (Purchase purchase : list) {
+                    listener.finishedPurchase(purchase.getSku());
+                }
+            } else {
+                listener.finishedPurchase(null);
             }
         } else {
             listener.failedPurchase(IMPBillingResultHelper.getDescriptionFor(billingResult.getResponseCode()));

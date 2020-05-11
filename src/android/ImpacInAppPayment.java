@@ -31,7 +31,7 @@ public class ImpacInAppPayment extends CordovaPlugin {
         billingManager = new IMPBillingManager(context);
         billingManager.setListener(new IMPBillingManagerListener() {
             @Override
-            public void finishedPurchase(String sku) {
+            public void finishedPurchase(@Nullable String sku) {
                 sendUpdateMessage(new IMPUpdateMessage("finished", null), PluginResult.Status.OK);
             }
 
