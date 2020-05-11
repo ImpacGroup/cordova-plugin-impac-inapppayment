@@ -2,6 +2,7 @@ package de.impacgroup.inapppayment;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
@@ -18,19 +19,11 @@ import com.android.billingclient.api.PurchasesUpdatedListener;
 import com.android.billingclient.api.SkuDetails;
 import com.android.billingclient.api.SkuDetailsParams;
 import com.android.billingclient.api.SkuDetailsResponseListener;
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.Volley;
-
-import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 import static org.apache.cordova.Whitelist.TAG;
 
@@ -42,16 +35,20 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
     private IMPBillingManagerListener listener;
     private List<SkuDetails> skuDetails;
     private List<Purchase> mPurchases;
+    private List<String> openValidations;
+    private SharedPreferences sharedPreferences;
+    private static String validationKey = "de.impacgroup.openValidations";
+    private IMPValidationController validationController;
 
     private Purchase purchaseForAcknowlegde;
 
     // http config stuff
     private IMPValidationConfig config;
-    private RequestQueue queue;
 
     IMPBillingManager(Context context) {
         billingClient = BillingClient.newBuilder(context).setListener(this).enablePendingPurchases().build();
-        queue = Volley.newRequestQueue(context);
+        sharedPreferences = context.getSharedPreferences(validationKey, Context.MODE_PRIVATE);
+        validationController = new IMPValidationController(context);
         createConnection();
     }
 
@@ -123,19 +120,41 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
     }
 
     public void refreshStatus() {
-        Log.d(TAG, "IMPAC Loading purchases");
         Purchase.PurchasesResult purchasesResult = billingClient.queryPurchases(BillingClient.SkuType.SUBS);
         List<Purchase> purchases = purchasesResult.getPurchasesList();
         if (purchases != null) {
             for (Purchase purchase : purchases) {
-                Log.d(TAG, "purchases: " + purchase.getSku() + " " + purchase.getOrderId() + " " + purchase.getPurchaseToken());
-                sendPurchaseToAPI(purchase);
+                performValidation(purchase);
             }
         }
     }
 
+    /**
+     * Sets the information to perform validation against server.
+     * @param accessToken Token to identify at the server application
+     * @param url url to the rest api
+     * @param type tpye of the access token (Bearer…)
+     */
     public void setValidation(String accessToken, String url, String type) {
-        this.config = new IMPValidationConfig(url, accessToken, type);
+        validationController.setConfig(new IMPValidationConfig(url, accessToken, type));
+        performOpenValidation();
+    }
+
+    /**
+     * Performs validation for purchases that are not yet validated. Open validation can happen if network connection was disconnected during validation.
+     */
+    private void performOpenValidation() {
+        Set<String> tokens = sharedPreferences.getStringSet(validationKey, null);
+        if (tokens != null) {
+            openValidations = new ArrayList<>(tokens);
+            for (Purchase purchase: this.mPurchases) {
+                for (String token: openValidations) {
+                    if (purchase.getPurchaseToken().equals(token)) {
+                        performValidation(purchase);
+                    }
+                }
+            }
+        }
     }
 
     private void handlePurchase(Purchase purchase) {
@@ -149,7 +168,7 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
                 this.purchaseForAcknowlegde = purchase;
                 billingClient.acknowledgePurchase(acknowledgePurchaseParams, this);
             } else {
-                sendPurchaseToAPI(purchase);
+                performValidation(purchase);
             }
         } else if (purchase.getPurchaseState() == PurchaseState.PENDING) {
             listener.pendingPurchase(purchase.getSku());
@@ -198,9 +217,6 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
             if (oldSkuDetail != null) {
                 builder.setOldSku(oldSkuDetail.getSku(), getTokenFor(oldSkuDetail.getSku()));
                 builder.setReplaceSkusProrationMode(BillingFlowParams.ProrationMode.IMMEDIATE_WITH_TIME_PRORATION);
-                Log.d(TAG, "buyProduct: crossgrade from " + oldSkuDetail.getSku());
-            } else {
-                Log.d(TAG, "buyProduct: no crossgrade");
             }
 
             BillingFlowParams flowParams = builder.build();
@@ -220,55 +236,45 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
 
     @Override
     public void onAcknowledgePurchaseResponse(BillingResult billingResult) {
-
-        this.sendPurchaseToAPI(this.purchaseForAcknowlegde);
+        performValidation(this.purchaseForAcknowlegde);
     }
 
-    private void sendPurchaseToAPI(final Purchase purchase) {
+    /**
+     * Performs a validation for a purchase.
+     * @param purchase Purchase to be validated
+     */
+    private void performValidation(final Purchase purchase) {
+        IMPValidationModel model = new IMPValidationModel(this.purchaseForAcknowlegde.getPurchaseToken(), this.purchaseForAcknowlegde.getSku());
+        validationController.validate(model, new IMPValidationController.IMPValidationListener() {
 
-        if (purchase != null && this.config != null) {
-            Map<String, String> data = new HashMap<>();
-            data.put("purchaseToken", purchase.getPurchaseToken());
-            data.put("productId", purchase.getSku());
+            @Override
+            public void failedValidation(String error) {
+                storeOpenValidation(purchase.getPurchaseToken());
+                listener.failedPurchase(error);
+            }
 
-            JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, this.config.url, new JSONObject(data),
-                    new Response.Listener<JSONObject>()
-                    {
-                        @Override
-                        public void onResponse(JSONObject response) {
-                            // response
-                            if (listener != null) {
-                                listener.finishedPurchase(purchase.getSku());
-                            }
-                        }
-                    },
-                    new Response.ErrorListener()
-                    {
-                        @Override
-                        public void onErrorResponse(VolleyError error) {
-                            // error
-                            if (listener != null) {
-                                listener.failedPurchase(error.toString());
-                            }
-                        }
-                    }
-            ) {
-
-                /**
-                 * Passing auth request headers
-                 */
-                @Override
-                public Map<String, String> getHeaders() {
-                    HashMap<String, String> headers = new HashMap<>();
-                    headers.put("Content-Type", "application/json");
-                    headers.put("Authorization", config.authorizationType + " " + config.accessString);
-                    return headers;
+            @Override
+            public void validationFinished(boolean isValid) {
+                if (listener != null) {
+                    listener.finishedPurchase(purchase.getSku());
                 }
-            };
-            queue.add(postRequest);
-        } else if (listener != null) {
-            listener.failedPurchase("Unknown error");
+            }
+        });
+    }
+
+    /**
+     * Stores a Purchasetoken to validate it later. Token get stored in SharedPreferences.
+     * @param token Purchase token to store.
+     */
+    private void storeOpenValidation(String token) {
+        Set<String> tokens = sharedPreferences.getStringSet(validationKey, null);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        if (tokens == null) {
+            tokens = new HashSet<>();
         }
+        tokens.add(token);
+        editor.putStringSet(validationKey, tokens);
+        editor.apply();
     }
 
     /**

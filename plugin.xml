@@ -31,7 +31,7 @@
         <source-file src="src/ios/IMPValidationConfig.swift"/>
         <source-file src="src/ios/IMPValidationController.swift"/>
         <source-file src="src/ios/IMPSKErrorHelper.swift"/>
-        <source-file src="src/ios/IMPValidationResult.swift"/>        
+        <source-file src="src/ios/IMPValidationResult.swift"/>
     </platform>
 
     <platform name="android">
@@ -49,7 +49,9 @@
         <source-file src="src/android/IMPBillingResultHelper.java" target-dir="src/de/impacgroup/inapppayment"/>
         <source-file src="src/android/IMPUpdateMessage.java" target-dir="src/de/impacgroup/inapppayment"/>
         <source-file src="src/android/IMPBillingClientState.java" target-dir="src/de/impacgroup/inapppayment"/>
-        <source-file src="src/android/IMPValidationConfig.java" target-dir="src/de/impacgroup/inapppayment"/>        
+        <source-file src="src/android/IMPValidationConfig.java" target-dir="src/de/impacgroup/inapppayment"/>
+        <source-file src="src/android/IMPValidationController.java" target-dir="src/de/impacgroup/inapppayment"/>
+        <source-file src="src/android/IMPValidationModel.java" target-dir="src/de/impacgroup/inapppayment"/>
         <framework src="com.android.billingclient:billing:2.1.0"/>
         <framework src="com.google.code.gson:gson:2.8.6"/>
         <framework src="com.android.volley:volley:1.1.1"/>

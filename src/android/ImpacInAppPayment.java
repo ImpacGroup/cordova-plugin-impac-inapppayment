@@ -41,7 +41,7 @@ public class ImpacInAppPayment extends CordovaPlugin {
             }
 
             @Override
-            public void failedPurchase(String error) {
+            public void failedPurchase(@Nullable String error) {
                 sendUpdateMessage(new IMPUpdateMessage("finished", error), PluginResult.Status.ERROR);
             }
 
