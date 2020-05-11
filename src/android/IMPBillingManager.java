@@ -145,7 +145,7 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
      */
     private void performOpenValidation() {
         Set<String> tokens = sharedPreferences.getStringSet(validationKey, null);
-        if (tokens != null) {
+        if (tokens != null && mPurchases != null) {
             openValidations = new ArrayList<>(tokens);
             for (Purchase purchase: this.mPurchases) {
                 for (String token: openValidations) {
@@ -244,7 +244,7 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
      * @param purchase Purchase to be validated
      */
     private void performValidation(final Purchase purchase) {
-        IMPValidationModel model = new IMPValidationModel(this.purchaseForAcknowlegde.getPurchaseToken(), this.purchaseForAcknowlegde.getSku());
+        IMPValidationModel model = new IMPValidationModel(purchase.getPurchaseToken(), purchase.getSku());
         validationController.validate(model, new IMPValidationController.IMPValidationListener() {
 
             @Override
