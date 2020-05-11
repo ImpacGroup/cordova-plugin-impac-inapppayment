@@ -51,7 +51,7 @@ public class IMPValidationController {
                                     listener.validationFinished(response.getBoolean("success"));
                                 } catch (JSONException e) {
                                     listener.failedValidation("Invalid answer from api.");
-                                };
+                                }
                             }
                         },
                         new Response.ErrorListener()

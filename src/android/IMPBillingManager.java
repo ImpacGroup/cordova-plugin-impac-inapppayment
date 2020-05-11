@@ -35,7 +35,6 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
     private IMPBillingManagerListener listener;
     private List<SkuDetails> skuDetails;
     private List<Purchase> mPurchases;
-    private List<String> openValidations;
     private SharedPreferences sharedPreferences;
     private static String validationKey = "de.impacgroup.openValidations";
     private IMPValidationController validationController;
@@ -150,7 +149,7 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
     private void performOpenValidation() {
         Set<String> tokens = sharedPreferences.getStringSet(validationKey, null);
         if (tokens != null && mPurchases != null) {
-            openValidations = new ArrayList<>(tokens);
+            List<String> openValidations = new ArrayList<>(tokens);
             for (Purchase purchase: this.mPurchases) {
                 for (String token: openValidations) {
                     if (purchase.getPurchaseToken().equals(token)) {
