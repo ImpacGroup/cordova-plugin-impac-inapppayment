@@ -131,10 +131,9 @@ class IMPStoreManager: NSObject, SKPaymentTransactionObserver {
                 if let mProduct = getProductBy(id: transaction.payment.productIdentifier) {
                     var errorString: String? = nil
                     if let error = transaction.error as? SKError {
-                        errorString = IMPSKErrorHelper.getDescriptionFor(code: error.code)
-                        /*if error.code != SKError.paymentCancelled {
+                        if error.code != SKError.paymentCancelled {
                             errorString = IMPSKErrorHelper.getDescriptionFor(code: error.code)
-                        }*/
+                        }
                     } else {
                         let errorDescription = transaction.error != nil ? transaction.error!.localizedDescription : ""
                         errorString = "Unkown error accured: " + errorDescription
