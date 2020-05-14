@@ -5,11 +5,10 @@
 //  Created by Felix Nievelstein on 03.02.20.
 //  Copyright © 2020 Impac Gmbh. All rights reserved.
 //
-
 import Foundation
 
 struct IMPUpdateMessage: Codable {
-    let prodcut: IMPProduct?
+    let prodcuts: [IMPProduct]?
     let status: String
     let description: String?
     let transactions: [String]?
@@ -56,7 +55,7 @@ struct IMPUpdateMessage: Codable {
             IMPStoreManager.shared.setValidationConfig(config: config!)
         } else {
             let description = "Invalid arguments, missing accessToken and url"
-            let message = IMPUpdateMessage(prodcut: nil, status: "setValidation_error", description: description, transactions: nil)
+            let message = IMPUpdateMessage(prodcuts: nil, status: "setValidation_error", description: description, transactions: nil)
             sendUpdateMessage(message: message, status: CDVCommandStatus_ERROR)
             logError(message: description)
         }
@@ -81,13 +80,17 @@ struct IMPUpdateMessage: Codable {
                 IMPStoreManager.shared.buyProduct(productId: productId, config: mConfig)
             } else {
                 let description = "Missing validation configuration. Did you set validation configuration?"
-                let message = IMPUpdateMessage(prodcut: IMPStoreManager.shared.getIMPProductBy(id: productId), status: "buyProduct_error", description: description, transactions: nil)
+                var products: [IMPProduct] = []
+                if let mProd = IMPStoreManager.shared.getIMPProductBy(id: productId) {
+                    products.append(mProd)
+                }
+                let message = IMPUpdateMessage(prodcuts: products, status: "buyProduct_error", description: description, transactions: nil)
                 sendUpdateMessage(message: message, status: CDVCommandStatus_ERROR)
                 logError(message: description)
             }
         } else {
             let description = "Invalid arguments, missing product id"
-            let message = IMPUpdateMessage(prodcut: nil, status: "buyProduct_error", description: description, transactions: nil)
+            let message = IMPUpdateMessage(prodcuts: nil, status: "buyProduct_error", description: description, transactions: nil)
             sendUpdateMessage(message: message, status: CDVCommandStatus_ERROR)
             logError(message: description)
         }
@@ -107,12 +110,12 @@ struct IMPUpdateMessage: Codable {
 extension ImpacInappPayment: IMPStoreManagerDelegate {
     
     func refreshedReceipt(receipt: String) {
-        let message = IMPUpdateMessage(prodcut: nil, status: "refreshedReceipt", description: nil, transactions: nil)
+        let message = IMPUpdateMessage(prodcuts: nil, status: "refreshedReceipt", description: nil, transactions: nil)
         sendUpdateMessage(message: message, status: CDVCommandStatus_OK)
     }
     
     func userViolation(receipt: String, transactions: [String]?) {
-        let message = IMPUpdateMessage(prodcut: nil, status: "userViolation", description: nil, transactions: transactions)
+        let message = IMPUpdateMessage(prodcuts: nil, status: "userViolation", description: nil, transactions: transactions)
         sendUpdateMessage(message: message, status: CDVCommandStatus_OK)
     }
     
@@ -129,13 +132,14 @@ extension ImpacInappPayment: IMPStoreManagerDelegate {
         }
     }
     
-    func finishedPurchasingProcess(success: Bool, product: IMPProduct, error: String?) {
-        let message = IMPUpdateMessage(prodcut: product, status: "finished", description: error, transactions: nil)
+    func finishedPurchasingProcess(success: Bool, products: [IMPProduct], error: String?) {
+        let message = IMPUpdateMessage(prodcuts: products, status: "finished", description: error, transactions: nil)
         sendUpdateMessage(message: message, status: error == nil ? CDVCommandStatus_OK : CDVCommandStatus_ERROR)
     }
+
     
-    func didPauseTransaction(product: IMPProduct) {
-        let message = IMPUpdateMessage(prodcut: product, status: "didPause", description: nil, transactions: nil)
+    func didPauseTransaction(products: [IMPProduct]) {
+        let message = IMPUpdateMessage(prodcuts: products, status: "didPause", description: nil, transactions: nil)
         sendUpdateMessage(message: message, status: CDVCommandStatus_OK)
     }
     
