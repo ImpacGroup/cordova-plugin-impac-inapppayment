@@ -10,4 +10,5 @@ public interface IMPBillingManagerListener {
     void failedPurchase(@Nullable String error);
     void productsLoaded(List<IMPProduct> list);
     void failedLoadingProducts(String error);
+    void failedStore(String error);
 }

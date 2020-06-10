@@ -1,37 +1,43 @@
 {
-    "name": "cordova-plugin-impac-inapppayment",
-    "version": "0.1.0",
-    "description": "An Cordova plugin for iOS and Android that allows to make in app payments for auto renewable subscriptions.",
-    "cordova": {
-      "id": "cordova-plugin-impac-inapppayment",
-      "platforms": [
-        "android",
-        "ios"
-      ]
-    },
-    "repository": {
-      "type": "git",
-      "url": "git+https://github.com/ImpacGroup/cordova-plugin-impac-inapppayment.git"
-    },
-    "keywords": [
-      "inapppayment",
-      "ecosystem:cordova",
-      "cordova-android",
-      "cordova-ios"
-    ],
-    "engines": {
-      "cordovaDependencies": {
-        "0.1.0": {
-          "cordova-android": ">8.0.0",
-          "cordova-ios": ">5.0.0",
-          "cordova-plugin-android-support-v7-appcompat": "1.0.0"
-        }
+  "name": "cordova-plugin-impac-inapppayment",
+  "version": "1.0.1",
+  "description": "An Cordova plugin for iOS and Android that allows to make in app payments for auto renewable subscriptions.",
+  "cordova": {
+    "id": "cordova-plugin-impac-inapppayment",
+    "platforms": [
+      "ios",
+      "android"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ImpacGroup/cordova-plugin-impac-inapppayment.git"
+  },
+  "keywords": [
+    "cordova",
+    "android",
+    "ios",
+    "inapppayment",
+    "ecosystem:cordova",
+    "cordova-ios",
+    "cordova-android",
+    "Storekit",
+    "Google Play Billing",
+    "Subscriptions"
+  ],
+  "engines": {
+    "cordovaDependencies": {
+      "1.0.0": {
+        "cordova-android": ">8.0.0",
+        "cordova-ios": ">5.0.0",
+        "cordova-plugin-android-support-v7-appcompat": "1.0.0"
       }
-    },
-    "author": "Felix Nievelstein <fn@impacgroup.de>",
-    "license": "MIT",
-    "bugs": {
-      "url": "https://github.com/ImpacGroup/cordova-plugin-impac-inapppayment/issues"
-    },
-    "homepage": "https://github.com/ImpacGroup/cordova-plugin-impac-inapppayment"
-  }
+    }
+  },
+  "author": "Impac GmbH",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ImpacGroup/cordova-plugin-impac-inapppayment/issues"
+  },
+  "homepage": "https://github.com/ImpacGroup/cordova-plugin-impac-inapppayment#readme"
+}

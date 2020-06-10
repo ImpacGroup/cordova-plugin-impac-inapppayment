@@ -55,7 +55,13 @@ public class ImpacInAppPayment extends CordovaPlugin {
             public void failedLoadingProducts(String error) {
                 productCallbackContext.error(error);
             }
+
+            @Override
+            public void failedStore(String error) {
+                sendUpdateMessage(new IMPUpdateMessage("connection", error), PluginResult.Status.ERROR);
+            }
         });
+        billingManager.createConnection();
     }
 
     @Override
@@ -79,7 +85,7 @@ public class ImpacInAppPayment extends CordovaPlugin {
                 billingManager.buyProduct(args.getString(0), cordova.getActivity(), oldSku);
                 return true;
             case "canMakePayments":
-                callbackContext.success(1);
+                callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, billingManager.canMakePurchase));
                 return true;
             case "onUpdate":
                 updateCallbackContext = callbackContext;
@@ -109,14 +115,6 @@ public class ImpacInAppPayment extends CordovaPlugin {
             }
         }
         billingManager.setIDs(listIds);
-    }
-
-    private void finishProcess(@Nullable String error) {
-        if (updateCallbackContext != null) {
-            PluginResult result = new PluginResult( error == null ? PluginResult.Status.OK : PluginResult.Status.ERROR);
-            result.setKeepCallback(true);
-            updateCallbackContext.sendPluginResult(result);
-        }
     }
 
     private void sendUpdateMessage(IMPUpdateMessage message, PluginResult.Status status) {

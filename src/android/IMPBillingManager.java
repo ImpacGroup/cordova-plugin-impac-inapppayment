@@ -38,6 +38,7 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
     private SharedPreferences sharedPreferences;
     private static String validationKey = "de.impacgroup.openValidations";
     private IMPValidationController validationController;
+    boolean canMakePurchase = false;
 
     private Purchase purchaseForAcknowlegde;
 
@@ -48,21 +49,22 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
         billingClient = BillingClient.newBuilder(context).setListener(this).enablePendingPurchases().build();
         sharedPreferences = context.getSharedPreferences(validationKey, Context.MODE_PRIVATE);
         validationController = new IMPValidationController(context);
-        createConnection();
     }
 
-    private void createConnection() {
+    void createConnection() {
         state = IMPBillingClientState.connecting;
         billingClient.startConnection(new BillingClientStateListener() {
             @Override
             public void onBillingSetupFinished(BillingResult billingResult) {
                 state = IMPBillingClientState.connected;
                 if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+                    canMakePurchase = true;
                     loadPurchases();
                     // The BillingClient is ready. You can query purchases here.
                     refreshStatus();
-                } else {
-                    recreateConnection();
+                } else if (listener != null) {
+                    canMakePurchase = false;
+                    listener.failedStore(IMPBillingResultHelper.getDescriptionFor(billingResult.getResponseCode()));
                 }
             }
             @Override
