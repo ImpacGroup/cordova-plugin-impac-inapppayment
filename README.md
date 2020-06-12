@@ -29,8 +29,28 @@ window.plugins.impacInappPayment.setValidation(
 )
 ```
 
+The purchase process is complete asynchron, therefor you need to listen to updates with *onupdate*. 
 
-# Load Products
+```js 
+window.plugins.impacInappPayment.onUpdate((result) => {
+        //Example
+        const json = JSON.parse(result);
+        const message = plainToClass(UpdateMessage, json as any);
+        message.products;
+        message.status;
+        message.description;
+        message.transactions;
+    }, (error) => {
+        const json = JSON.parse(error);
+        const message = plainToClass(UpdateMessage, json as any);
+        message.products;
+        message.status;
+        message.description;
+        message.transactions;
+    });
+```
+
+## Load Products
 
 Load the available products with *getProductList*. Make sure you've set the ids before in ios.
 ```js 
@@ -51,3 +71,22 @@ function onFail(error) {
     alert('Failed because: ' + error);
 }
 ```
+
+## Buy product
+
+Before you buy a product make sure the user is entitled to purchase products and the app can communicate with the store.
+
+```js
+window.plugins.impacInappPayment.canMakePayments((canMake) => {
+    if (canMake) {
+        // Purchase products
+    }
+})
+```
+
+To purchase a product perform *buyProduct* with the product id. If you want to upgrade or downgrade a subscription on android, make sure to also add the old sku. Otherwise you create a new subscrition. 
+
+```js
+window.plugins.impacInappPayment.buyProduct(productId, oldSku)
+```
+
