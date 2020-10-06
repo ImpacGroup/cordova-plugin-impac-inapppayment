@@ -263,6 +263,7 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
                 if (listener != null) {
                     listener.finishedPurchase(purchase.getSku());
                 }
+                removeIfStored(purchase.getPurchaseToken());
             }
         });
     }
@@ -277,9 +278,39 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
         if (tokens == null) {
             tokens = new HashSet<>();
         }
-        tokens.add(token);
+        if (this.find(token, tokens) == null) {
+            tokens.add(token);
+        }
         editor.putStringSet(validationKey, tokens);
         editor.apply();
+    }
+
+    private void removeIfStored(String token) {
+        Set<String> tokens = sharedPreferences.getStringSet(validationKey, null);
+        if (tokens != null) {
+            String mToken = this.find(token, tokens);
+            if (mToken != null) {
+                tokens.remove(mToken);
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putStringSet(validationKey, tokens);
+                editor.apply();
+            }
+        }
+    }
+
+    /**
+     * Search for a token in a set of tokens.
+     * @param token String to search for.
+     * @param tokens Set of Strings.
+     * @return Token if found.
+     */
+    private @Nullable String find(String token, Set<String> tokens) {
+        for (String mToken: tokens) {
+            if (mToken.equals(token)) {
+                return mToken;
+            }
+        }
+        return null;
     }
 
     /**
