@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
         xmlns:android="http://schemas.android.com/apk/res/android"
-        id="cordova-plugin-impac-inapppayment" version="1.0.2">
+        id="cordova-plugin-impac-inapppayment" version="1.0.3">
     <name>impac-inapppayment</name>
 
     <description>An Cordova plugin for iOS and Android that allows to make in app payments</description>
