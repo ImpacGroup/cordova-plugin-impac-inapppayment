@@ -33,6 +33,10 @@ public class IMPValidationController {
         this.config = config;
     }
 
+    public boolean configIsSet() {
+        return this.config != null;
+    }
+
     interface IMPValidationListener {
         public void failedValidation(String error);
         public void validationFinished(boolean isValid);

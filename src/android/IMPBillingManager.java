@@ -3,7 +3,6 @@ package de.impacgroup.inapppayment;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.util.Log;
 
 import androidx.annotation.Nullable;
 
@@ -60,6 +59,9 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
                 if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
                     canMakePurchase = true;
                     loadPurchases();
+                    if (validationController.configIsSet()) {
+                        performOpenValidation();
+                    }
                     // The BillingClient is ready. You can query purchases here.
                     refreshStatus();
                 } else if (listener != null) {
@@ -82,7 +84,7 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
     }
 
     private void loadPurchases() {
-        Purchase.PurchasesResult result = billingClient.queryPurchases(BillingClient.SkuType.INAPP);
+        Purchase.PurchasesResult result = billingClient.queryPurchases(BillingClient.SkuType.SUBS);
         mPurchases = result.getPurchasesList();
     }
 
@@ -105,7 +107,6 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
 
     @Override
     public void onPurchasesUpdated(BillingResult billingResult, @Nullable List<Purchase> list) {
-        Log.d(TAG, "onPurchasesUpdated: " + billingResult);
         if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK
                 && list != null) {
             for (Purchase purchase : list) {
@@ -129,6 +130,7 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
         List<Purchase> purchases = purchasesResult.getPurchasesList();
         if (purchases != null) {
             for (Purchase purchase : purchases) {
+
                 performValidation(purchase);
             }
         }
@@ -142,7 +144,6 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
      */
     public void setValidation(String accessToken, String url, String type) {
         validationController.setConfig(new IMPValidationConfig(url, accessToken, type));
-        performOpenValidation();
     }
 
     /**
@@ -151,12 +152,12 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
     private void performOpenValidation() {
         Set<String> tokens = sharedPreferences.getStringSet(validationKey, null);
         if (tokens != null && mPurchases != null) {
-            List<String> openValidations = new ArrayList<>(tokens);
-            for (Purchase purchase: this.mPurchases) {
-                for (String token: openValidations) {
-                    if (purchase.getPurchaseToken().equals(token)) {
-                        performValidation(purchase);
-                    }
+            for (String token: tokens) {
+                Purchase purchase = findPurchaseFor(token);
+                if (purchase != null) {
+                    performValidation(purchase);
+                } else {
+                    removeIfStored(token);
                 }
             }
         }
@@ -188,7 +189,6 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
             @Override
             public void onSkuDetailsResponse(BillingResult billingResult, List<SkuDetails> list) {
                 if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
-                    Log.d(TAG, "onSkuDetailsResponse: " + list);
                     skuDetails = list;
                     List<IMPProduct> products = new ArrayList<>();
                     for (SkuDetails skuDetail: list) {
@@ -273,11 +273,8 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
      * @param token Purchase token to store.
      */
     private void storeOpenValidation(String token) {
-        Set<String> tokens = sharedPreferences.getStringSet(validationKey, null);
+        Set<String> tokens = new HashSet<>(sharedPreferences.getStringSet(validationKey, new HashSet<String>()));
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        if (tokens == null) {
-            tokens = new HashSet<>();
-        }
         if (this.find(token, tokens) == null) {
             tokens.add(token);
         }
@@ -286,15 +283,13 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
     }
 
     private void removeIfStored(String token) {
-        Set<String> tokens = sharedPreferences.getStringSet(validationKey, null);
-        if (tokens != null) {
-            String mToken = this.find(token, tokens);
-            if (mToken != null) {
-                tokens.remove(mToken);
-                SharedPreferences.Editor editor = sharedPreferences.edit();
-                editor.putStringSet(validationKey, tokens);
-                editor.apply();
-            }
+        Set<String> tokens = new HashSet<>(sharedPreferences.getStringSet(validationKey, new HashSet<String>()));
+        String mToken = this.find(token, tokens);
+        if (mToken != null) {
+            tokens.remove(mToken);
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putStringSet(validationKey, tokens);
+            editor.apply();
         }
     }
 
@@ -308,6 +303,15 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
         for (String mToken: tokens) {
             if (mToken.equals(token)) {
                 return mToken;
+            }
+        }
+        return null;
+    }
+
+    private @Nullable Purchase findPurchaseFor(String token) {
+        for (Purchase mPurchase: this.mPurchases) {
+            if (mPurchase.getPurchaseToken().equals(token)) {
+                return mPurchase;
             }
         }
         return null;
