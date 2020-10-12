@@ -2,7 +2,7 @@ package de.impacgroup.inapppayment;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.SharedPreferences;
+import android.net.ParseException;
 
 import androidx.annotation.Nullable;
 
@@ -20,11 +20,10 @@ import com.android.billingclient.api.SkuDetailsParams;
 import com.android.billingclient.api.SkuDetailsResponseListener;
 
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
-
-import static org.apache.cordova.Whitelist.TAG;
 
 public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgePurchaseResponseListener {
 
@@ -34,8 +33,8 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
     private IMPBillingManagerListener listener;
     private List<SkuDetails> skuDetails;
     private List<Purchase> mPurchases;
-    private SharedPreferences sharedPreferences;
-    private static String validationKey = "de.impacgroup.openValidations";
+    private IMPSharedPreferencesHelper sharedPreferences;
+
     private IMPValidationController validationController;
     boolean canMakePurchase = false;
 
@@ -45,8 +44,9 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
     private IMPValidationConfig config;
 
     IMPBillingManager(Context context) {
+
         billingClient = BillingClient.newBuilder(context).setListener(this).enablePendingPurchases().build();
-        sharedPreferences = context.getSharedPreferences(validationKey, Context.MODE_PRIVATE);
+        sharedPreferences = new IMPSharedPreferencesHelper(context);
         validationController = new IMPValidationController(context);
     }
 
@@ -126,6 +126,26 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
     }
 
     public void refreshStatus() {
+        Date lastDate = sharedPreferences.getRefreshDate();
+        if (lastDate != null) {
+            Calendar calLast = Calendar.getInstance();
+            Calendar calCurrent = Calendar.getInstance();
+            try {
+                calLast.setTime(lastDate);
+                calLast.add(Calendar.DAY_OF_MONTH, 1);
+                if (calLast.before(calCurrent)) {
+                    refresh();
+                }
+            } catch(ParseException e) {
+                e.printStackTrace();
+                refresh();
+            }
+        } else {
+            refresh();
+        }
+    }
+
+    private void refresh() {
         Purchase.PurchasesResult purchasesResult = billingClient.queryPurchases(BillingClient.SkuType.SUBS);
         List<Purchase> purchases = purchasesResult.getPurchasesList();
         if (purchases != null) {
@@ -133,6 +153,7 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
 
                 performValidation(purchase);
             }
+            sharedPreferences.storeRefreshDate(new Date());
         }
     }
 
@@ -150,7 +171,7 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
      * Performs validation for purchases that are not yet validated. Open validation can happen if network connection was disconnected during validation.
      */
     private void performOpenValidation() {
-        Set<String> tokens = sharedPreferences.getStringSet(validationKey, null);
+        Set<String> tokens = sharedPreferences.getTokensForValidation();
         if (tokens != null && mPurchases != null) {
             for (String token: tokens) {
                 Purchase purchase = findPurchaseFor(token);
@@ -273,23 +294,19 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
      * @param token Purchase token to store.
      */
     private void storeOpenValidation(String token) {
-        Set<String> tokens = new HashSet<>(sharedPreferences.getStringSet(validationKey, new HashSet<String>()));
-        SharedPreferences.Editor editor = sharedPreferences.edit();
+        Set<String> tokens = sharedPreferences.getTokensForValidation();
         if (this.find(token, tokens) == null) {
             tokens.add(token);
+            sharedPreferences.storeTokenForValidation(tokens);
         }
-        editor.putStringSet(validationKey, tokens);
-        editor.apply();
     }
 
     private void removeIfStored(String token) {
-        Set<String> tokens = new HashSet<>(sharedPreferences.getStringSet(validationKey, new HashSet<String>()));
+        Set<String> tokens = sharedPreferences.getTokensForValidation();
         String mToken = this.find(token, tokens);
         if (mToken != null) {
             tokens.remove(mToken);
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putStringSet(validationKey, tokens);
-            editor.apply();
+            sharedPreferences.storeTokenForValidation(tokens);
         }
     }
 
