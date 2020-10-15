@@ -11,7 +11,6 @@ import java.util.Set;
 
 public class IMPSharedPreferencesHelper {
 
-    private static String preferencesKey = "de.impacgroup.preferernces";
     private static String validationKey = "de.impacgroup.openValidations";
     private static String refreshKey = "de.impacgroup.refreshStatus";
     private SharedPreferences sharedPreferences;
@@ -35,7 +34,7 @@ public class IMPSharedPreferencesHelper {
     }
 
     Set<String> getTokensForValidation() {
-        return new HashSet<>(sharedPreferences.getStringSet(validationKey, new HashSet<>()));
+        return new HashSet<>(sharedPreferences.getStringSet(validationKey, new HashSet<String>()));
     }
 
     void storeTokenForValidation(Set<String> tokens) {
@@ -45,6 +44,7 @@ public class IMPSharedPreferencesHelper {
     }
 
     private SharedPreferences getShared(Context context) {
+        String preferencesKey = "de.impacgroup.preferernces";
         return context.getSharedPreferences(preferencesKey, Context.MODE_PRIVATE);
     }
 }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
         xmlns:android="http://schemas.android.com/apk/res/android"
-        id="cordova-plugin-impac-inapppayment" version="1.0.5">
+        id="cordova-plugin-impac-inapppayment" version="1.0.6">
     <name>impac-inapppayment</name>
 
     <description>An Cordova plugin for iOS and Android that allows to make in app payments</description>
@@ -52,7 +52,7 @@
         <source-file src="src/android/IMPValidationConfig.java" target-dir="src/de/impacgroup/inapppayment"/>
         <source-file src="src/android/IMPValidationController.java" target-dir="src/de/impacgroup/inapppayment"/>
         <source-file src="src/android/IMPValidationModel.java" target-dir="src/de/impacgroup/inapppayment"/>
-        <framework src="com.android.billingclient:billing:2.1.0"/>
+        <framework src="com.android.billingclient:billing:3.0.1"/>
         <framework src="com.google.code.gson:gson:2.8.6"/>
         <framework src="com.android.volley:volley:1.1.1"/>
     </platform>

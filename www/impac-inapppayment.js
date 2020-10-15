@@ -27,6 +27,10 @@ ImpacInappPayment.prototype.onUpdate = function(successCallback, errorCallback) 
     cordova.exec(successCallback, errorCallback, 'ImpacInappPayment', 'onUpdate', []);
 }
 
+ImpacInappPayment.prototype.manageSubscriptions = function(successCallback, errorCallback) {
+  cordova.exec(successCallback, errorCallback, 'ImpacInappPayment', 'manageSubscriptions', [])
+}
+
 ImpacInappPayment.prototype.restorePurchases = function() {
   cordova.exec(null, null, 'ImpacInappPayment', 'restorePurchases', []);
 }

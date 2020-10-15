@@ -38,8 +38,8 @@ public class IMPValidationController {
     }
 
     interface IMPValidationListener {
-        public void failedValidation(String error);
-        public void validationFinished(boolean isValid);
+        void failedValidation(String error);
+        void validationFinished(boolean isValid);
     }
 
     public void validate(@NonNull final IMPValidationModel model, @NonNull final IMPValidationListener listener) {

@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.net.ParseException;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.android.billingclient.api.AcknowledgePurchaseParams;
@@ -40,9 +41,6 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
 
     private Purchase purchaseForAcknowlegde;
 
-    // http config stuff
-    private IMPValidationConfig config;
-
     IMPBillingManager(Context context) {
 
         billingClient = BillingClient.newBuilder(context).setListener(this).enablePendingPurchases().build();
@@ -54,7 +52,7 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
         state = IMPBillingClientState.connecting;
         billingClient.startConnection(new BillingClientStateListener() {
             @Override
-            public void onBillingSetupFinished(BillingResult billingResult) {
+            public void onBillingSetupFinished(@NonNull BillingResult billingResult) {
                 state = IMPBillingClientState.connected;
                 if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
                     canMakePurchase = true;
@@ -208,7 +206,7 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
     void getProducts() {
         billingClient.querySkuDetailsAsync(skuParamsBuilder.build(), new SkuDetailsResponseListener() {
             @Override
-            public void onSkuDetailsResponse(BillingResult billingResult, List<SkuDetails> list) {
+            public void onSkuDetailsResponse(@NonNull BillingResult billingResult, List<SkuDetails> list) {
                 if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
                     skuDetails = list;
                     List<IMPProduct> products = new ArrayList<>();
@@ -241,8 +239,11 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
             BillingFlowParams.Builder builder = BillingFlowParams.newBuilder();
             builder.setSkuDetails(skuDetail);
             if (oldSkuDetail != null) {
-                builder.setOldSku(oldSkuDetail.getSku(), getTokenFor(oldSkuDetail.getSku()));
-                builder.setReplaceSkusProrationMode(BillingFlowParams.ProrationMode.IMMEDIATE_WITH_TIME_PRORATION);
+                String oldToken = getTokenFor(oldSkuDetail.getSku());
+                if (oldToken != null) {
+                    builder.setOldSku(oldSkuDetail.getSku(), oldToken);
+                    builder.setReplaceSkusProrationMode(BillingFlowParams.ProrationMode.IMMEDIATE_WITH_TIME_PRORATION);
+                }
             }
 
             BillingFlowParams flowParams = builder.build();
@@ -261,7 +262,7 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
     }
 
     @Override
-    public void onAcknowledgePurchaseResponse(BillingResult billingResult) {
+    public void onAcknowledgePurchaseResponse(@NonNull BillingResult billingResult) {
         performValidation(this.purchaseForAcknowlegde);
     }
 

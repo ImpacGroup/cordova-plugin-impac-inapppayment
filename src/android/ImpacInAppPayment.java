@@ -1,6 +1,8 @@
 package de.impacgroup.inapppayment;
 
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -95,6 +97,17 @@ public class ImpacInAppPayment extends CordovaPlugin {
                 return true;
             case "setValidation":
                 billingManager.setValidation(args.getString(0), args.getString(1), args.getString(2));
+                return true;
+            case "manageSubscriptions":
+                try {
+                    Uri playStoreUri = Uri.parse("https://play.google.com/store/account/subscriptions");
+                    Intent manageIntent = new Intent(Intent.ACTION_VIEW, playStoreUri);
+                    this.cordova.getActivity().startActivity(manageIntent);
+                    callbackContext.success();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    callbackContext.error(e.getLocalizedMessage());
+                }
                 return true;
             default:
                 callbackContext.error("\"" + action + "\" is not a recognized action.");
