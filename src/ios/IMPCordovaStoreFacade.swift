@@ -61,6 +61,15 @@ struct IMPUpdateMessage: Codable {
         }
     }
     
+    @objc(manageSubscriptions:) func manageSubscriptions(command: CDVInvokedUrlCommand) {
+        if let url = URL(string: "https://apps.apple.com/account/subscriptions"), UIApplication.shared.canOpenURL(url) {
+            UIApplication.shared.open(url, options: [:], completionHandler: nil)
+            self.commandDelegate.send(CDVPluginResult(status: CDVCommandStatus_OK), callbackId: command.callbackId)
+        } else {
+            self.commandDelegate.send(CDVPluginResult(status: CDVCommandStatus_ERROR), callbackId: command.callbackId)
+        }
+    }
+    
     /**
      Returns a list of products based on the registrated product ids.
      */
