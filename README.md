@@ -90,3 +90,21 @@ To purchase a product perform *buyProduct* with the product id. If you want to u
 window.plugins.impacInappPayment.buyProduct(productId, oldSku)
 ```
 
+## Status of subscriptions
+
+You can refresh the status of your subscriptions manually by calling:
+
+```js
+window.plugins.impacInappPayment.refreshStatus()
+```
+
+This will check if there are changes of your subscriptions and will send them for validation to your server. Please note that this mechanism will automatically run daily for android. For iOS this runs only if a subscrition changes.
+
+## Manage subscriptions
+
+It's best practice to make is as easy as possible for the users to manage there subscriptions.
+With the following function you can open the subscrition management of android or ios.
+
+```js
+window.plugins.impacInappPayment.manageSubscriptions(onSuccess, onFail)
+```
