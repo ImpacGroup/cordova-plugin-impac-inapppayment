@@ -3,7 +3,7 @@
 ### Cordova Plugin for iOS and Android to buy InApp payment subscriptions. ###
 
 ## Supported platforms
-- Android 5+
+- Android 6+
 - iOS 11+
 
 ## Install
