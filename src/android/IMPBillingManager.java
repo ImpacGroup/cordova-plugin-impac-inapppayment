@@ -90,8 +90,10 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
         if (mPurchases != null) {
             for (Purchase purchase : mPurchases) {
                 if (purchase.isAcknowledged()) {
-                    if (purchase.getSku().equals(sku)) {
-                        return purchase.getPurchaseToken();
+                    for (String psku : purchase.getSkus()) {
+                        if (psku.equals(sku)) {
+                            return purchase.getPurchaseToken();
+                        }
                     }
                 }
             }
@@ -113,7 +115,9 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
         } else if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.USER_CANCELED) {
             if (list != null) {
                 for (Purchase purchase : list) {
-                    listener.finishedPurchase(purchase.getSku());
+                    for (String psku : purchase.getSkus()) {
+                        listener.finishedPurchase(psku);
+                    }
                 }
             } else {
                 listener.finishedPurchase(null);
@@ -196,7 +200,9 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
                 performValidation(purchase);
             }
         } else if (purchase.getPurchaseState() == PurchaseState.PENDING) {
-            listener.pendingPurchase(purchase.getSku());
+            for (String psku : purchase.getSkus()) {
+                listener.pendingPurchase(psku);
+            }
         }
     }
 
@@ -215,6 +221,7 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
                     }
                     listener.productsLoaded(products);
                 } else {
+                    
                     String statusString = IMPBillingResultHelper.getDescriptionFor(billingResult.getResponseCode());
                     listener.failedLoadingProducts(statusString);
                 }
@@ -236,17 +243,24 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
         }
 
         if (skuDetail != null) {
-            BillingFlowParams.Builder builder = BillingFlowParams.newBuilder();
-            builder.setSkuDetails(skuDetail);
+            BillingFlowParams.Builder billingFlowParams = BillingFlowParams.newBuilder();
+            BillingFlowParams.SubscriptionUpdateParams.Builder builder = BillingFlowParams.SubscriptionUpdateParams.newBuilder();
+            billingFlowParams.setSkuDetails(skuDetail);
+
             if (oldSkuDetail != null) {
                 String oldToken = getTokenFor(oldSkuDetail.getSku());
+
                 if (oldToken != null) {
-                    builder.setOldSku(oldSkuDetail.getSku(), oldToken);
+                    builder.setOldSkuPurchaseToken(oldToken);
                     builder.setReplaceSkusProrationMode(BillingFlowParams.ProrationMode.IMMEDIATE_WITH_TIME_PRORATION);
+
+                    BillingFlowParams.SubscriptionUpdateParams updateParams = builder.build();
+                    billingFlowParams.setSubscriptionUpdateParams(updateParams);
+
                 }
             }
 
-            BillingFlowParams flowParams = builder.build();
+            BillingFlowParams flowParams = billingFlowParams.build();
             billingClient.launchBillingFlow(activity, flowParams);
         }
 
@@ -271,23 +285,25 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
      * @param purchase Purchase to be validated
      */
     private void performValidation(final Purchase purchase) {
-        IMPValidationModel model = new IMPValidationModel(purchase.getPurchaseToken(), purchase.getSku());
-        validationController.validate(model, new IMPValidationController.IMPValidationListener() {
+        for (String psku : purchase.getSkus()) {
+            IMPValidationModel model = new IMPValidationModel(purchase.getPurchaseToken(), psku);
+            validationController.validate(model, new IMPValidationController.IMPValidationListener() {
 
-            @Override
-            public void failedValidation(String error) {
-                storeOpenValidation(purchase.getPurchaseToken());
-                listener.failedPurchase(error);
-            }
-
-            @Override
-            public void validationFinished(boolean isValid) {
-                if (listener != null) {
-                    listener.finishedPurchase(purchase.getSku());
+                @Override
+                public void failedValidation(String error) {
+                    storeOpenValidation(purchase.getPurchaseToken());
+                    listener.failedPurchase(error);
                 }
-                removeIfStored(purchase.getPurchaseToken());
-            }
-        });
+
+                @Override
+                public void validationFinished(boolean isValid) {
+                    if (listener != null) {
+                        listener.finishedPurchase(psku);
+                    }
+                    removeIfStored(purchase.getPurchaseToken());
+                }
+            });
+        }
     }
 
     /**
