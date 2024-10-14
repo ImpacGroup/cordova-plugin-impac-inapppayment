@@ -1,6 +1,6 @@
 {
   "name": "cordova-plugin-impac-inapppayment",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "An Cordova plugin for iOS and Android that allows to make in app payments for auto renewable subscriptions.",
   "cordova": {
     "id": "cordova-plugin-impac-inapppayment",
@@ -28,7 +28,7 @@
   "engines": {
     "cordovaDependencies": {
       "1.0.0": {
-        "cordova-android": ">8.0.0",
+        "cordova-android": ">10.0.0",
         "cordova-ios": ">5.0.0",
         "cordova-plugin-android-support-v7-appcompat": "1.0.0"
       }

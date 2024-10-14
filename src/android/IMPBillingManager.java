@@ -3,6 +3,7 @@ package de.impacgroup.inapppayment;
 import android.app.Activity;
 import android.content.Context;
 import android.net.ParseException;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -13,36 +14,38 @@ import com.android.billingclient.api.BillingClient;
 import com.android.billingclient.api.BillingClientStateListener;
 import com.android.billingclient.api.BillingFlowParams;
 import com.android.billingclient.api.BillingResult;
+import com.android.billingclient.api.ProductDetails;
+import com.android.billingclient.api.ProductDetailsResponseListener;
 import com.android.billingclient.api.Purchase;
 import com.android.billingclient.api.Purchase.PurchaseState;
+import com.android.billingclient.api.PurchasesResponseListener;
 import com.android.billingclient.api.PurchasesUpdatedListener;
-import com.android.billingclient.api.SkuDetails;
-import com.android.billingclient.api.SkuDetailsParams;
-import com.android.billingclient.api.SkuDetailsResponseListener;
+import com.android.billingclient.api.QueryProductDetailsParams;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
 public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgePurchaseResponseListener {
 
-    private BillingClient billingClient;
+    private final BillingClient billingClient;
     private IMPBillingClientState state;
-    private SkuDetailsParams.Builder skuParamsBuilder;
+    private QueryProductDetailsParams.Builder productParamsBuilder;
     private IMPBillingManagerListener listener;
-    private List<SkuDetails> skuDetails;
+    private List<ProductDetails> productDetails;
     private List<Purchase> mPurchases;
-    private IMPSharedPreferencesHelper sharedPreferences;
+    private final List<IMPProduct> products = new ArrayList<>(); // Declare and initialize products
+    private final IMPSharedPreferencesHelper sharedPreferences;
 
-    private IMPValidationController validationController;
+    private final IMPValidationController validationController;
     boolean canMakePurchase = false;
 
     private Purchase purchaseForAcknowlegde;
 
     IMPBillingManager(Context context) {
-
         billingClient = BillingClient.newBuilder(context).setListener(this).enablePendingPurchases().build();
         sharedPreferences = new IMPSharedPreferencesHelper(context);
         validationController = new IMPValidationController(context);
@@ -50,25 +53,26 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
 
     void createConnection() {
         state = IMPBillingClientState.connecting;
+        Log.d("IMPBillingManager", "Connecting BillingClient");
         billingClient.startConnection(new BillingClientStateListener() {
             @Override
             public void onBillingSetupFinished(@NonNull BillingResult billingResult) {
-                state = IMPBillingClientState.connected;
                 if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+                    Log.d("IMPBillingManager", "BillingClient setup finished successfully");
+                    state = IMPBillingClientState.connected;
                     canMakePurchase = true;
                     loadPurchases();
-                    if (validationController.configIsSet()) {
-                        performOpenValidation();
-                    }
-                    // The BillingClient is ready. You can query purchases here.
-                    refreshStatus();
-                } else if (listener != null) {
-                    canMakePurchase = false;
-                    listener.failedStore(IMPBillingResultHelper.getDescriptionFor(billingResult.getResponseCode()));
+                } else {
+                    Log.e("IMPBillingManager", "BillingClient setup failed with response code: " + billingResult.getResponseCode());
+                    state = IMPBillingClientState.closed;
                 }
             }
+
             @Override
             public void onBillingServiceDisconnected() {
+                Log.e("IMPBillingManager", "BillingClient service disconnected");
+                state = IMPBillingClientState.closed;
+                canMakePurchase = false;
                 recreateConnection();
             }
         });
@@ -76,29 +80,21 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
 
     private void recreateConnection() {
         if (state != IMPBillingClientState.closed) {
-            state = IMPBillingClientState.disconnected;
+            Log.d("IMPBillingManager", "Recreating BillingClient connection");
+            billingClient.endConnection();
             createConnection();
         }
     }
 
     private void loadPurchases() {
-        Purchase.PurchasesResult result = billingClient.queryPurchases(BillingClient.SkuType.SUBS);
-        mPurchases = result.getPurchasesList();
-    }
-
-    private @Nullable String getTokenFor(String sku) {
-        if (mPurchases != null) {
-            for (Purchase purchase : mPurchases) {
-                if (purchase.isAcknowledged()) {
-                    for (String psku : purchase.getSkus()) {
-                        if (psku.equals(sku)) {
-                            return purchase.getPurchaseToken();
-                        }
-                    }
+        billingClient.queryPurchasesAsync(BillingClient.SkuType.SUBS, new PurchasesResponseListener() {
+            @Override
+            public void onQueryPurchasesResponse(@NonNull BillingResult billingResult, @NonNull List<Purchase> purchases) {
+                if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+                    mPurchases = purchases;
                 }
             }
-        }
-        return null;
+        });
     }
 
     public void setListener(IMPBillingManagerListener listener) {
@@ -107,8 +103,7 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
 
     @Override
     public void onPurchasesUpdated(BillingResult billingResult, @Nullable List<Purchase> list) {
-        if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK
-                && list != null) {
+        if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && list != null) {
             for (Purchase purchase : list) {
                 handlePurchase(purchase);
             }
@@ -138,7 +133,7 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
                 if (calLast.before(calCurrent)) {
                     refresh();
                 }
-            } catch(ParseException e) {
+            } catch (ParseException e) {
                 e.printStackTrace();
                 refresh();
             }
@@ -148,22 +143,26 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
     }
 
     private void refresh() {
-        Purchase.PurchasesResult purchasesResult = billingClient.queryPurchases(BillingClient.SkuType.SUBS);
-        List<Purchase> purchases = purchasesResult.getPurchasesList();
-        if (purchases != null) {
-            for (Purchase purchase : purchases) {
+        billingClient.queryPurchasesAsync(BillingClient.SkuType.SUBS, new PurchasesResponseListener() {
+            @Override
+            public void onQueryPurchasesResponse(@NonNull BillingResult billingResult, @NonNull List<Purchase> purchases) {
+                if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+                    for (Purchase purchase : purchases) {
 
-                performValidation(purchase);
+                        performValidation(purchase);
+                    }
+                    sharedPreferences.storeRefreshDate(new Date());
+                }
             }
-            sharedPreferences.storeRefreshDate(new Date());
-        }
+        });
     }
 
     /**
      * Sets the information to perform validation against server.
+     *
      * @param accessToken Token to identify at the server application
-     * @param url url to the rest api
-     * @param type tpye of the access token (Bearer…)
+     * @param url         url to the rest api
+     * @param type        tpye of the access token (Bearer…)
      */
     public void setValidation(String accessToken, String url, String type) {
         validationController.setConfig(new IMPValidationConfig(url, accessToken, type));
@@ -175,7 +174,7 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
     private void performOpenValidation() {
         Set<String> tokens = sharedPreferences.getTokensForValidation();
         if (tokens != null && mPurchases != null) {
-            for (String token: tokens) {
+            for (String token : tokens) {
                 Purchase purchase = findPurchaseFor(token);
                 if (purchase != null) {
                     performValidation(purchase);
@@ -188,12 +187,8 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
 
     private void handlePurchase(Purchase purchase) {
         if (purchase.getPurchaseState() == PurchaseState.PURCHASED) {
-            // Acknowledge the purchase if it hasn't already been acknowledged.
             if (!purchase.isAcknowledged()) {
-                AcknowledgePurchaseParams acknowledgePurchaseParams =
-                        AcknowledgePurchaseParams.newBuilder()
-                                .setPurchaseToken(purchase.getPurchaseToken())
-                                .build();
+                AcknowledgePurchaseParams acknowledgePurchaseParams = AcknowledgePurchaseParams.newBuilder().setPurchaseToken(purchase.getPurchaseToken()).build();
                 this.purchaseForAcknowlegde = purchase;
                 billingClient.acknowledgePurchase(acknowledgePurchaseParams, this);
             } else {
@@ -210,66 +205,124 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
      * Loads sku details
      */
     void getProducts() {
-        billingClient.querySkuDetailsAsync(skuParamsBuilder.build(), new SkuDetailsResponseListener() {
+        billingClient.queryProductDetailsAsync(productParamsBuilder.build(), new ProductDetailsResponseListener() {
             @Override
-            public void onSkuDetailsResponse(@NonNull BillingResult billingResult, List<SkuDetails> list) {
+            public void onProductDetailsResponse(@NonNull BillingResult billingResult, List<ProductDetails> list) {
                 if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
-                    skuDetails = list;
-                    List<IMPProduct> products = new ArrayList<>();
-                    for (SkuDetails skuDetail: list) {
-                        products.add(new IMPProduct(skuDetail));
+                    if (list != null) {
+                        productDetails = list;
+                        List<IMPProduct> products = new ArrayList<>();
+                        for (ProductDetails productDetail : list) {
+                            try {
+                                IMPProduct product = new IMPProduct(productDetail);
+                                products.add(product);
+                                Log.d("IMPBillingManager", "Added product: " + product);
+                            } catch (Exception e) {
+                                Log.e("IMPBillingManager", "Error creating IMPProduct: ", e);
+                            }
+                        }
+                        Log.d("IMPBillingManager", "Products are " + products);
+                        listener.productsLoaded(products);
+                    } else {
+                        Log.e("IMPBillingManager", "Product details list is null");
+                        listener.failedLoadingProducts("Product details list is null");
                     }
-                    listener.productsLoaded(products);
                 } else {
-                    
                     String statusString = IMPBillingResultHelper.getDescriptionFor(billingResult.getResponseCode());
                     listener.failedLoadingProducts(statusString);
                 }
             }
         });
+    }
 
+    private @Nullable String getTokenFor(String sku) {
+        if (mPurchases != null) {
+            for (Purchase purchase : mPurchases) {
+                if (purchase.isAcknowledged()) {
+                    for (String psku : purchase.getSkus()) {
+                        if (psku.equals(sku)) {
+                            return purchase.getPurchaseToken();
+                        }
+                    }
+                }
+            }
+        } else {
+            Log.e("IMPBillingManager", "mPurchases is null");
+        }
+        return null;
+    }
+
+    private @Nullable Purchase findPurchaseFor(String token) {
+        if (mPurchases != null) {
+            for (Purchase mPurchase : this.mPurchases) {
+                if (mPurchase.getPurchaseToken().equals(token)) {
+                    return mPurchase;
+                }
+            }
+        } else {
+            Log.e("IMPBillingManager", "mPurchases is null");
+        }
+        return null;
     }
 
     void setIDs(List<String> ids) {
-        skuParamsBuilder = SkuDetailsParams.newBuilder();
-        skuParamsBuilder.setSkusList(ids).setType(BillingClient.SkuType.SUBS);
+        List<QueryProductDetailsParams.Product> productList = new ArrayList<>();
+        for (String id : ids) {
+            productList.add(QueryProductDetailsParams.Product.newBuilder().setProductId(id).setProductType(BillingClient.ProductType.SUBS).build());
+        }
+        productParamsBuilder = QueryProductDetailsParams.newBuilder();
+        productParamsBuilder.setProductList(productList);
     }
 
     void buyProduct(String id, Activity activity, String oldSku) {
-        SkuDetails skuDetail = getSkuDetailsBy(id);
-        SkuDetails oldSkuDetail = null;
-        if (oldSku != null) {
-            oldSkuDetail = getSkuDetailsBy(oldSku);
+        if (state != IMPBillingClientState.connected) {
+            Log.e("IMPBillingManager", "BillingClient is not connected");
+            return;
         }
 
-        if (skuDetail != null) {
+        ProductDetails productDetail = getProductDetailsBy(id);
+        ProductDetails oldProductDetail = null;
+        if (oldSku != null) {
+            oldProductDetail = getProductDetailsBy(oldSku);
+        }
+
+        if (productDetail != null) {
             BillingFlowParams.Builder billingFlowParams = BillingFlowParams.newBuilder();
-            BillingFlowParams.SubscriptionUpdateParams.Builder builder = BillingFlowParams.SubscriptionUpdateParams.newBuilder();
-            billingFlowParams.setSkuDetails(skuDetail);
 
-            if (oldSkuDetail != null) {
-                String oldToken = getTokenFor(oldSkuDetail.getSku());
+            // Retrieve the offerToken for the subscription
+            String offerToken = null;
+            if (productDetail.getSubscriptionOfferDetails() != null && !productDetail.getSubscriptionOfferDetails().isEmpty()) {
+                offerToken = productDetail.getSubscriptionOfferDetails().get(0).getOfferToken();
+            }
 
+            if (offerToken == null) {
+                Log.e("IMPBillingManager", "Offer token is null for product: " + id);
+                return;
+            }
+
+            BillingFlowParams.ProductDetailsParams productDetailsParams = BillingFlowParams.ProductDetailsParams.newBuilder().setProductDetails(productDetail).setOfferToken(offerToken) // Set the offerToken
+                    .build();
+            billingFlowParams.setProductDetailsParamsList(Collections.singletonList(productDetailsParams));
+            if (oldProductDetail != null) {
+                String oldToken = getTokenFor(oldProductDetail.getProductId());
                 if (oldToken != null) {
-                    builder.setOldSkuPurchaseToken(oldToken);
-                    builder.setReplaceSkusProrationMode(BillingFlowParams.ProrationMode.IMMEDIATE_WITH_TIME_PRORATION);
-
-                    BillingFlowParams.SubscriptionUpdateParams updateParams = builder.build();
-                    billingFlowParams.setSubscriptionUpdateParams(updateParams);
-
+                    BillingFlowParams.SubscriptionUpdateParams.Builder builder = BillingFlowParams.SubscriptionUpdateParams.newBuilder();
+                    builder.setOldPurchaseToken(oldToken);
+                    billingFlowParams.setSubscriptionUpdateParams(builder.build());
                 }
             }
 
             BillingFlowParams flowParams = billingFlowParams.build();
             billingClient.launchBillingFlow(activity, flowParams);
+        } else {
+            Log.e("IMPBillingManager", "Product details not found for product: " + id);
         }
-
     }
 
-    private @Nullable SkuDetails getSkuDetailsBy(String id) {
-        for ( SkuDetails skudetail : skuDetails) {
-            if (skudetail.getSku().equals(id)) {
-                return skudetail;
+    private @Nullable ProductDetails getProductDetailsBy(String id) {
+        for (ProductDetails productDetail : productDetails) {
+            if (productDetail.getProductId().equals(id)) {
+                return productDetail;
             }
         }
         return null;
@@ -282,13 +335,13 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
 
     /**
      * Performs a validation for a purchase.
+     *
      * @param purchase Purchase to be validated
      */
     private void performValidation(final Purchase purchase) {
         for (String psku : purchase.getSkus()) {
             IMPValidationModel model = new IMPValidationModel(purchase.getPurchaseToken(), psku);
             validationController.validate(model, new IMPValidationController.IMPValidationListener() {
-
                 @Override
                 public void failedValidation(String error) {
                     storeOpenValidation(purchase.getPurchaseToken());
@@ -297,10 +350,7 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
 
                 @Override
                 public void validationFinished(boolean isValid) {
-                    if (listener != null) {
-                        listener.finishedPurchase(psku);
-                    }
-                    removeIfStored(purchase.getPurchaseToken());
+                    listener.validationFinished(isValid);
                 }
             });
         }
@@ -308,6 +358,7 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
 
     /**
      * Stores a Purchasetoken to validate it later. Token get stored in SharedPreferences.
+     *
      * @param token Purchase token to store.
      */
     private void storeOpenValidation(String token) {
@@ -329,23 +380,15 @@ public class IMPBillingManager implements PurchasesUpdatedListener, AcknowledgeP
 
     /**
      * Search for a token in a set of tokens.
-     * @param token String to search for.
+     *
+     * @param token  String to search for.
      * @param tokens Set of Strings.
      * @return Token if found.
      */
     private @Nullable String find(String token, Set<String> tokens) {
-        for (String mToken: tokens) {
+        for (String mToken : tokens) {
             if (mToken.equals(token)) {
                 return mToken;
-            }
-        }
-        return null;
-    }
-
-    private @Nullable Purchase findPurchaseFor(String token) {
-        for (Purchase mPurchase: this.mPurchases) {
-            if (mPurchase.getPurchaseToken().equals(token)) {
-                return mPurchase;
             }
         }
         return null;
